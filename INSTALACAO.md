@@ -12,10 +12,9 @@ A instalação é feita uma única vez. Depois, o uso é só pelo menu.
 
 - Conta Google ativa, com acesso ao Google Drive e Planilhas
 - Computador (não funciona bem pelo celular — alguns passos não estão disponíveis no app móvel)
-- Acesso aos 8 arquivos de código do projeto:
-  - **Link do repositório / pasta no Drive:** _[A SER PREENCHIDO POR IGOR]_
+- Acesso aos 8 arquivos de código do projeto
 
-**Tempo estimado:** 20 a 30 minutos, sem pressa.
+**Tempo estimado:** 10 minutos, sem pressa.
 
 **Se algo der errado:** não se preocupe em "consertar" — anote em que passo aconteceu, tire um print da tela se conseguir, e fale com o Igor.
 
@@ -42,11 +41,11 @@ O que vamos fazer, em ordem:
 3. Uma nova aba do navegador vai abrir com uma planilha sem nome.
 4. Clique no título "Planilha sem título" (canto superior esquerdo) e renomeie para algo como:
    ```
-   Mapa do Eixo - UTI - Hospital Jessé Fontes
+   Mapa do Eixo - Fisioterapia - Hospital Jessé Fontes
    ```
 5. **Não feche essa aba.** Vamos voltar para ela ao final.
 
-[SCREENSHOT: planilha em branco recém-criada com o nome aplicado]
+![Planilha em branco recém-criada com o nome aplicado](imgs/manual_img1.png)
 
 ✅ Ao fim deste passo: você tem uma planilha em branco aberta no navegador, com o nome correto.
 
@@ -57,13 +56,16 @@ O que vamos fazer, em ordem:
 Aqui é onde a maior parte do trabalho acontece. O **Apps Script** é um editor de código que vive dentro do Google — é separado da planilha, mas conectado a ela.
 
 1. Na planilha que você acabou de criar, no menu superior, clique em **Extensões** → **Apps Script**.
+
+![Localização do Apps Script](imgs/manual_img2.png)
+
 2. Uma **nova aba** do navegador vai abrir mostrando o editor de scripts.
 3. No editor, você vai ver:
    - Do lado esquerdo: uma lista chamada **Arquivos**, com um arquivo padrão chamado `Código.gs`.
    - No centro: o conteúdo desse arquivo, que tem só uma função vazia `myFunction()`.
    - No topo: o nome do projeto, que está como "Projeto sem título".
 
-[SCREENSHOT: editor do Apps Script recém-aberto, mostrando o arquivo Código.gs e a função vazia]
+![Editor do Apps Script recém-aberto, mostrando o arquivo Código.gs e a função vazia](imgs/manual_img3_doodle.png)
 
 4. Clique no nome **"Projeto sem título"** (no topo) e renomeie para `Mapa do Eixo`. Confirme.
 
@@ -81,7 +83,7 @@ Esta é a parte mais demorada. Vamos criar 8 arquivos no editor, um de cada vez,
 2. Clique nos **três pontinhos** que aparecem do lado direito do nome.
 3. Escolha **Excluir**. Confirme.
 
-[SCREENSHOT: menu de três pontinhos com a opção "Excluir" destacada]
+![Menu de três pontinhos com a opção "Excluir" destacada](imgs/manual_img4_doodle.png)
 
 ### 3.2. Criar cada arquivo
 
@@ -103,13 +105,13 @@ Para **cada um** dos 8 arquivos, repita estes passos:
 3. Digite o nome exato do arquivo (ex: `config`) e pressione **Enter**.
 4. Um novo arquivo abre no centro, com um esqueleto de função vazia.
 5. **Selecione tudo** (Ctrl+A no Windows / Cmd+A no Mac) e **apague** (Delete).
-6. Vá ao repositório / pasta do Drive (link no topo deste tutorial), abra o arquivo correspondente (ex: `config.gs`), e **copie todo o conteúdo** (Ctrl+A → Ctrl+C).
+6. Vá ao repositório / pasta do Drive, abra o arquivo correspondente (ex: `config.gs`), e **copie todo o conteúdo** (Ctrl+A → Ctrl+C).
 7. Volte ao editor do Apps Script e **cole** no arquivo vazio (Ctrl+V).
 8. Salve com **Ctrl+S** (ou Cmd+S no Mac). Você deve ver uma confirmação rápida no topo.
 
-[SCREENSHOT: botão "+" ao lado de Arquivos, com a opção "Script" destacada]
+![Botão "+" ao lado de Arquivos, com a opção "Script" destacada](imgs/manual_img5_doodle.png)
 
-[SCREENSHOT: arquivo `config` criado e preenchido, com indicação visual de "salvo"]
+![Arquivo `config` criado e preenchido, com indicação visual de "salvo"](imgs/manual_img6.png)
 
 ### 3.3. Validação intermediária
 
@@ -126,9 +128,9 @@ turnos.gs
 interface.gs
 ```
 
-[SCREENSHOT: lista completa dos 8 arquivos no painel lateral]
+![Lista completa dos 8 arquivos no painel lateral](imgs/manual_img7.png)
 
-> **Atenção:** os nomes precisam ser **exatamente** esses. Se você digitou `Config` (com C maiúsculo) ou `fisioterapeuta` (sem o "s"), o sistema pode não funcionar. Caso veja qualquer diferença, clique nos três pontinhos do arquivo, escolha **Renomear** e corrija.
+> **Atenção:** os nomes prSiecisam ser **exatamente** esses. Se você digitou `Config` (com C maiúsculo) ou `fisioterapeuta` (sem o "s"), o sistema pode não funcionar. Caso veja qualquer diferença, clique nos três pontinhos do arquivo, escolha **Renomear** e corrija.
 
 ✅ Ao fim deste passo: os 8 arquivos estão criados, preenchidos com o código correspondente, e salvos.
 
@@ -150,7 +152,7 @@ Esta é a única customização necessária. O arquivo `fisioterapeutas.gs` tem 
 4. **Não mexa nas aspas, vírgulas, ou em qualquer outra parte da linha.** Só troque o número.
 5. Salve com **Ctrl+S**.
 
-[SCREENSHOT: arquivo fisioterapeutas.gs com os CREFITOs reais preenchidos]
+![arquivo fisioterapeutas.gs com os CREFITOs demo preenchidos](imgs/manual_img8.png)
 
 ✅ Ao fim deste passo: os CREFITOs reais estão no arquivo, salvos.
 
@@ -165,12 +167,12 @@ Agora vamos rodar a função que cria a estrutura visual do Mapa do Eixo na plan
 1. Na **barra superior** do editor (acima do código), há um menu suspenso (dropdown) com nome de função. Por padrão pode estar mostrando alguma função qualquer.
 2. Clique nesse dropdown e procure por **`_criarAbaModelo`** (vai estar no meio da lista). Selecione.
 
-[SCREENSHOT: dropdown da barra superior com `_criarAbaModelo` selecionado]
-
 ### 5.2. Executar
 
 3. Clique no botão **Executar** (▶), ao lado do dropdown.
 4. Vai aparecer uma janela: **"Autorização necessária"** — clique em **Revisar permissões**.
+
+![Arquivo modelo selecionado, função _criarAbaModelo selecionada e executar destacado](imgs/manual_img9_doodle.png)
 
 ### 5.3. Autorizar (primeira vez apenas)
 
@@ -181,15 +183,17 @@ Agora vamos rodar a função que cria a estrutura visual do Mapa do Eixo na plan
 
    > Esse "não seguro" assusta mas significa apenas que o app não passou por revisão pública do Google — o que faz sentido, já que é um script interno da sua equipe. Você está autorizando seu próprio script a usar suas próprias planilhas.
 
+![Pedido para revisão permissões](imgs/manual_img10.png)
+
 7. Na tela seguinte, o Google mostra a lista de permissões que o script precisa:
    - **Ver, editar, criar e excluir todas as suas planilhas do Google Drive**
    - **Exibir e executar conteúdo de terceiros em planilhas...**
 
    Clique em **Permitir**.
 
-[SCREENSHOT: tela "Google não verificou este app" com link "Avançado" visível]
-
-[SCREENSHOT: tela final de permissões com botão "Permitir"]
+![Botão avançado destacado](imgs/manual_img11_doodle.png)
+![Acessar projeto destacado](imgs/manual_img12_doodle.png)
+![Botão continuar destacado](imgs/manual_img13_doodle.png)
 
 ### 5.4. Aguardar execução
 
@@ -201,9 +205,9 @@ Agora vamos rodar a função que cria a estrutura visual do Mapa do Eixo na plan
     [OK] ✅ Aba-modelo criada com sucesso!
     ```
 
-[SCREENSHOT: registro de execução mostrando a mensagem de sucesso final]
-
 > **Se aparecer erro vermelho:** anote a mensagem exata, tire print do registro de execução e mande para o Igor.
+
+![Planilha criada](imgs/manual_img14_doodle.png)
 
 ✅ Ao fim deste passo: o script está autorizado e a aba-modelo foi criada (mas ela é oculta, então você não vai vê-la na planilha ainda).
 
@@ -224,7 +228,7 @@ Agora vamos rodar a função que cria a estrutura visual do Mapa do Eixo na plan
    - ☀️ Criar turno DIURNO
    - 🌙 Criar turno NOTURNO
 
-[SCREENSHOT: barra de menus da planilha mostrando o menu "📋 Mapa do Eixo" expandido com as duas opções]
+![Barra de menus da planilha mostrando o menu "📋 Mapa do Eixo" expandido com as duas opções](imgs/manual_img15.png)
 
 ### Teste rápido
 
@@ -234,7 +238,7 @@ Agora vamos rodar a função que cria a estrutura visual do Mapa do Eixo na plan
 9. Confirmação final — clique **Sim**.
 10. Em alguns segundos, uma nova aba aparece na parte inferior da planilha com o nome `DD/MM/AAAA D`, mostrando o Mapa do Eixo pronto para uso.
 
-[SCREENSHOT: aba recém-criada com o Mapa do Eixo, mostrando seção de informações, indicadores e cabeçalho da tabela]
+![Aba recém-criada com o Mapa do Eixo, mostrando seção de informações, indicadores e cabeçalho da tabela](imgs/manual_img16.png)
 
 ✅ Ao fim deste passo: o sistema está instalado e funcionando.
 
@@ -251,7 +255,8 @@ Agora que o sistema funciona, libere o acesso para quem vai usar.
 3. Para cada pessoa, escolha a permissão **Editor**.
 4. Clique em **Enviar**.
 
-[SCREENSHOT: caixa de diálogo de compartilhamento com permissão "Editor" selecionada]
+![Botão de compartilhamento](imgs/manual_img17.png)
+![Caixa de diálogo de compartilhamento com permissão "Editor" selecionada](imgs/manual_img18_doodle.png)
 
 > **Importante:** o sistema foi projetado para até **2 editores ativos ao mesmo tempo**. Adicionar mais pessoas com permissão de Editor não é problema — só evite que mais de 2 estejam editando turnos simultaneamente, para não dar conflito.
 

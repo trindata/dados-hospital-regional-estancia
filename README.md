@@ -2,7 +2,7 @@
 
 Sistema de gestão de turnos da fisioterapia da UTI do Hospital Regional Jessé Fontes. Cada turno (Diurno 7h / Noturno 19h) gera uma aba do Google Sheets contendo o estado clínico dos pacientes ativos: via aérea, eventos do turno, metas terapêuticas, desfecho e avaliação diária. Pacientes ativos são copiados automaticamente do turno anterior; pacientes com alta, óbito ou transferência saem da lista.
 
-A criação de cada turno é manual, disparada por um menu na própria planilha.
+A criação automática de cada aba é feita pelo usuário através de um menu na própria planilha.
 
 ---
 
@@ -10,16 +10,16 @@ A criação de cada turno é manual, disparada por um menu na própria planilha.
 
 O código vive todo em Google Apps Script vinculado à planilha. Oito arquivos `.gs`:
 
-| Arquivo | Responsabilidade |
-|---|---|
-| `config.gs` | Constantes centrais: coordenadas, cores, dropdowns, regras de negócio |
-| `fisioterapeutas.gs` | Lista nominal de fisioterapeutas (isolado para manutenção fácil) |
-| `modelo.gs` | Construção da aba-modelo `_MODELO_MAPA_EIXO` (executado no setup) |
-| `turnos.gs` | Núcleo puro de criação de turnos — sem UI, recebe parâmetros e executa |
-| `pacientes.gs` | Cópia inteligente de pacientes ativos entre turnos (match por leito) |
-| `interface.gs` | Camada de UI: menu, prompts, alerts, toasts; orquestra o fluxo |
-| `utils.gs` | Auxiliares de domínio: nome de aba, data, zebra, preenchimento de cabeçalho |
-| `util_padronizacao.gs` | Auxiliares de formatação genérica (alinhamento, wrap, largura) |
+| Arquivo                | Responsabilidade                                                            |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `config.gs`            | Constantes centrais: coordenadas, cores, dropdowns, regras de negócio       |
+| `fisioterapeutas.gs`   | Lista nominal de fisioterapeutas (isolado para manutenção fácil)            |
+| `modelo.gs`            | Construção da aba-modelo `_MODELO_MAPA_EIXO` (executado no setup)           |
+| `turnos.gs`            | Núcleo puro de criação de turnos — sem UI, recebe parâmetros e executa      |
+| `pacientes.gs`         | Cópia inteligente de pacientes ativos entre turnos (match por leito)        |
+| `interface.gs`         | Camada de UI: menu, prompts, alerts, toasts; orquestra o fluxo              |
+| `utils.gs`             | Auxiliares de domínio: nome de aba, data, zebra, preenchimento de cabeçalho |
+| `util_padronizacao.gs` | Auxiliares de formatação genérica (alinhamento, wrap, largura)              |
 
 Dependências em uma frase: `interface.gs` chama `turnos.gs`, que clona o modelo criado por `modelo.gs`, copia pacientes via `pacientes.gs`, e usa `utils.gs` + `util_padronizacao.gs` para formatação. Todos leem `config.gs` e `fisioterapeutas.gs`.
 
