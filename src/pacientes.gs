@@ -19,7 +19,7 @@
  *
  * REGRAS:
  * - Remove pacientes com desfecho: ALTA, ÓBITO, TRANSFERÊNCIA
- * - Reseta campos pontuais: EVENTOS, Nº ATEND., ADMISSÃO, DESFECHO
+ * - Reseta campos pontuais de acordo com variável CAMPOS_RESETAR
  * - Mantém formatação zebrada
  *
  * @param {GoogleAppsScript.Spreadsheet.Sheet} abaDestino - Aba onde copiar pacientes

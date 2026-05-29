@@ -174,12 +174,12 @@ function _criarSecaoInformacoes(modelo) {
 }
 
 // ============================================================
-// SEÇÃO DE INDICADORES (Linhas 10-14)
+// SEÇÃO DE INDICADORES
 // ============================================================
 
 /**
- * Preenche as linhas 9-10 com a seção de indicadores: títulos
- * (linha 9) e fórmulas COUNTIF/SUM (linha 10). Itera sobre
+ * Preenche a seção de indicadores: títulos e fórmulas
+ * COUNTIF/SUM (linha 10). Itera sobre
  * `CONFIG.INDICADORES` — adicionar/remover indicadores se faz
  * editando esse array.
  *
@@ -560,8 +560,7 @@ function _ajustarColunas(modelo) {
 
 /**
  * Protege a aba inteira, exceto os ranges editáveis pela equipe:
- * data/turno (`B2:B3`), equipe (`B5:D7`) e dados de pacientes
- * (linhas PRIMEIRA a ULTIMA, colunas A-P).
+ * data/turno, equipe e dados de pacientes.
  *
  * Estratégia: cria proteção da aba toda, marca os ranges editáveis
  * como `UnprotectedRanges`, e remove todos os editores explícitos
@@ -593,7 +592,7 @@ function _protegerCelulas(modelo) {
 
     protection.setUnprotectedRanges(rangesEditaveis);
 
-    // ✅ CORREÇÃO: Remover TODOS os editores (exceto você)
+    // Remover TODOS os editores (exceto o criador)
     // Isso garante que APENAS o criador pode editar células protegidas
     protection.removeEditors(protection.getEditors());
 

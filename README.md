@@ -8,20 +8,31 @@ A criação automática de cada aba é feita pelo usuário através de um menu n
 
 ## Mapa dos arquivos
 
-O código vive todo em Google Apps Script vinculado à planilha. Oito arquivos `.gs`:
+Todo o código do projeto está implementado em Google Apps Script vinculado à planilha. Atualmente, a estrutura é composta pelos seguintes arquivos `.gs`:
 
 | Arquivo                | Responsabilidade                                                            |
 | ---------------------- | --------------------------------------------------------------------------- |
-| `config.gs`            | Constantes centrais: coordenadas, cores, dropdowns, regras de negócio       |
-| `fisioterapeutas.gs`   | Lista nominal de fisioterapeutas (isolado para manutenção fácil)            |
-| `modelo.gs`            | Construção da aba-modelo `_MODELO_MAPA_EIXO` (executado no setup)           |
-| `turnos.gs`            | Núcleo puro de criação de turnos — sem UI, recebe parâmetros e executa      |
+| `config.gs`            | Constantes centrais: coordenadas, cores, dropdowns e regras de negócio      |
+| `fisioterapeutas.gs`   | Lista nominal de fisioterapeutas, isolada para facilitar manutenção         |
+| `modelo.gs`            | Construção da aba-modelo `_MODELO_MAPA_EIXO` (executado durante o setup)    |
+| `turnos.gs`            | Núcleo da criação de turnos; recebe parâmetros e executa a lógica principal |
 | `pacientes.gs`         | Cópia inteligente de pacientes ativos entre turnos (match por leito)        |
-| `interface.gs`         | Camada de UI: menu, prompts, alerts, toasts; orquestra o fluxo              |
-| `utils.gs`             | Auxiliares de domínio: nome de aba, data, zebra, preenchimento de cabeçalho |
-| `util_padronizacao.gs` | Auxiliares de formatação genérica (alinhamento, wrap, largura)              |
+| `interface.gs`         | Camada de interface: menus, prompts, alerts, toasts e orquestração do fluxo |
+| `utils.gs`             | Utilitários de domínio: datas, nomes de aba, zebra e preenchimento          |
+| `util_padronizacao.gs` | Auxiliares genéricos de formatação (wrap, alinhamento e largura)            |
 
-Dependências em uma frase: `interface.gs` chama `turnos.gs`, que clona o modelo criado por `modelo.gs`, copia pacientes via `pacientes.gs`, e usa `utils.gs` + `util_padronizacao.gs` para formatação. Todos leem `config.gs` e `fisioterapeutas.gs`.
+### Fluxo de dependências
+
+Em termos de fluxo:
+
+- `interface.gs` coordena as ações do usuário;
+- `turnos.gs` executa a criação dos turnos;
+- `modelo.gs` fornece a estrutura-base utilizada na clonagem;
+- `pacientes.gs` replica pacientes ativos entre abas;
+- `utils.gs` e `util_padronizacao.gs` aplicam regras auxiliares e formatação;
+- `config.gs` e `fisioterapeutas.gs` funcionam como fontes compartilhadas de configuração e dados.
+
+> **Observação:** o arquivo `testes.gs` é apenas um artefato de desenvolvimento utilizado para experimentação e validação local. Sua presença ou ausência não altera o comportamento funcional do sistema em produção.
 
 ---
 
