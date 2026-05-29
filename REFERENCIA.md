@@ -6,18 +6,18 @@ Referência operacional para quem vai mexer no código. Complementa o `README.md
 
 ## Glossário
 
-| Termo                      | Significado                                                                                                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Turno**                  | Janela de 12h. Diurno (D) das 7h às 19h; Noturno (N) das 19h às 7h. Cada turno é uma aba.                                                                                |
-| **Aba**                    | Sheet no Google Sheets, nomeada `DD/MM/YYYY D` ou `DD/MM/YYYY N`.                                                                                                        |
-| **Modelo**                 | Aba oculta `_MODELO_MAPA_EIXO` clonada a cada criação de turno.                                                                                                          |
-| **Leito**                  | Identificador da posição física do paciente na UTI. 13 leitos fixos: `V01-V03` (Vermelha), `A01-A08` (Amarela), `ISOL01-ISOL02` (Isolamento).                            |
-| **Leito extra**            | Leito criado dinamicamente quando há mais pacientes ativos do que leitos fixos. Adicionado no final da lista, ordenado V → A → ISOL.                                     |
-| **Leito duplicado**        | Dois pacientes registrados no mesmo leito no turno anterior. O primeiro fica no leito original; o segundo vira leito extra com sufixo `_duplicado_N`.                    |
-| **Leito não-identificado** | Leito presente na aba anterior mas ausente da lista do modelo (ex: erro de digitação, valor fora do dropdown). É preservado como extra com sufixo `_não_identificado_N`. |
-| **Paciente ativo**         | Paciente com nome preenchido e desfecho diferente de ALTA, ÓBITO ou TRANSFERÊNCIA. Só pacientes ativos são copiados para o próximo turno.                                |
-| **Desfecho**               | Estado final do paciente no turno. Valores: `ALTA`, `TRANSFERÊNCIA`, `ÓBITO`, ou vazio (paciente continua internado).                                                    |
-| **IMS**                    | Índice de Mobilidade. Coluna `IMS PRÉVIO \ ATUAL` registra a evolução motora.                                                                                            |
+| Termo                      | Significado                                                                                                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Turno**                  | Janela de 12h. Diurno (D) das 7h às 19h; Noturno (N) das 19h às 7h. Cada turno é uma aba.                                                                                                                                   |
+| **Aba**                    | Sheet no Google Sheets, nomeada `DD/MM/YYYY D` ou `DD/MM/YYYY N`.                                                                                                                                                           |
+| **Modelo**                 | Aba oculta `_MODELO_MAPA_EIXO` clonada a cada criação de turno.                                                                                                                                                             |
+| **Leito**                  | Identificador da posição física do paciente na UTI. 13 leitos fixos: `V01-V03` (Vermelha), `A01-A08` (Amarela), `ISOL01-ISOL02` (Isolamento).                                                                               |
+| **Leito extra**            | Leito criado dinamicamente quando há mais pacientes ativos do que leitos fixos. Adicionado no final da lista, ordenado V → A → ISOL.                                                                                        |
+| **Leito duplicado**        | Dois pacientes registrados no mesmo leito no turno anterior. O primeiro fica na linha do leito; o segundo vira leito extra mantendo o mesmo nome de leito (sem sufixo). A separação fica por conta da ordenação dos extras. |
+| **Leito não-identificado** | Leito presente na aba anterior mas ausente da lista do modelo (ex: erro de digitação, valor fora do dropdown). É preservado como extra mantendo o nome original (sem sufixo), para correção manual depois.                  |
+| **Paciente ativo**         | Paciente com nome preenchido e desfecho diferente de ALTA, ÓBITO ou TRANSFERÊNCIA. Só pacientes ativos são copiados para o próximo turno.                                                                                   |
+| **Desfecho**               | Estado final do paciente no turno. Valores: `ALTA`, `TRANSFERÊNCIA`, `ÓBITO`, ou vazio (paciente continua internado).                                                                                                       |
+| **IMS**                    | Índice de Mobilidade. Coluna `IMS PRÉVIO \ ATUAL` registra a evolução motora.                                                                                                                                               |
 
 ---
 
@@ -111,7 +111,7 @@ Implementadas em `pacientes.gs::_copiarPacientesAtivos`. Quando uma nova aba é 
 - Desfecho em `CONFIG.DESFECHOS_EXCLUIR` (`ALTA`, `ÓBITO`, `TRANSFERÊNCIA`) → ignorada
 - Resto → marcada como ativa
 
-**2. Reset de campos pontuais** (`CONFIG.CAMPOS_RESETAR`). Campos que descrevem "o que aconteceu neste turno" são limpos:
+**2. Reset de campos pontuais** (`CAMPOS_RESETAR`). Campos que descrevem "o que aconteceu neste turno" são limpos:
 
 | Coluna         | Reset para | Por quê                                             |
 | -------------- | ---------- | --------------------------------------------------- |
@@ -124,8 +124,8 @@ Campos que descrevem "estado contínuo" do paciente (diagnóstico, via aérea, m
 **3. Match por leito.** Para cada paciente ativo, busca-se a linha do leito correspondente na nova aba (clone fresco do modelo). Casos:
 
 - **Leito encontrado, 1 paciente**: cópia direta para a linha do leito.
-- **Leito encontrado, N pacientes** (duplicado): primeiro paciente vai para o leito original; demais viram leitos extras com sufixo `_duplicado_1`, `_duplicado_2`, etc.
-- **Leito não encontrado** (não-identificado): todos os pacientes daquele leito viram extras. O primeiro mantém o nome original; demais ganham sufixo `_não_identificado_N`.
+- **Leito encontrado, N pacientes** (duplicado): primeiro paciente vai para a linha do leito; demais viram leitos extras mantendo o mesmo nome de leito (sem sufixo).
+- **Leito não encontrado** (não-identificado): todos os pacientes daquele leito viram extras, mantendo o nome original do leito (sem sufixo).
 
 **4. Ordenação de extras.** Leitos extras são adicionados ao final da tabela, ordenados por categoria (V → A → ISOL → outros) e depois alfabeticamente. Lógica em `_compararLeitos`.
 

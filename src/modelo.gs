@@ -65,13 +65,13 @@ function _criarAbaModelo() {
 }
 
 // ============================================================
-// SEÇÃO DE INFORMAÇÕES (Linhas 1-8)
+// SEÇÃO DE INFORMAÇÕES
 // ============================================================
 
 /**
- * Preenche as linhas 1-7 com a seção de informações do turno:
- * Hospital, Data, Turno (linhas 1-3) e Equipe — Fisioterapeuta,
- * Enfermeiros, Médicos (linhas 5-7). Os campos B5:D7 ficam mesclados.
+ * Preenche as linhas inciais com a seção de informações do turno:
+ * Hospital, Data, Turno e Equipe — Fisioterapeuta,
+ * Enfermeiros, Médicos. Os campos para preenchimento mesclam 3 colunas.
  *
  * Os valores de data, turno e equipe ficam em branco no modelo —
  * são preenchidos a cada novo turno.

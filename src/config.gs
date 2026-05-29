@@ -297,13 +297,29 @@ const CONFIG = {
 
   // Desfechos que excluem paciente do próximo turno
   DESFECHOS_EXCLUIR: ["ALTA", "ÓBITO", "TRANSFERÊNCIA"],
+};
 
-  // Campos resetados entre turnos (eventos pontuais)
-  CAMPOS_RESETAR: {
-    5: "", // EVENTOS - Limpar eventos do turno anterior
-    12: "", // Nº ATEND. - Resetar contador de atendimentos
-    14: "NÃO", // ADMISSÃO - Limpar admissão
-  },
+// ============================================================
+// CAMPOS RESETADOS ENTRE TURNOS
+// ============================================================
+//
+// Mapa coluna → valor de reset
+// Aplicado sobre as linhas de dados após processamento
+// de cada turno.
+//
+// Propriedades suportadas:
+//   - Chave: referência da coluna via CONFIG (variável)
+//   - Valor: conteúdo limpo (string vazia "" ou valor padrão)
+//
+// Colunas omitidas não são alteradas entre turnos.
+// Eventos e atendimentos são sempre zerados; admissão
+// recebe valor padrão "NÃO".
+// ============================================================
+
+const CAMPOS_RESETAR = {
+  [CONFIG.COL_EVENTOS]: "", // EVENTOS - Limpar eventos do turno anterior
+  [CONFIG.COL_NUM_ATEND]: "", // Nº ATEND. - Resetar contador de atendimentos
+  [CONFIG.COL_ADMISSAO]: "NÃO", // ADMISSÃO - Limpar admissão
 };
 
 // ============================================================

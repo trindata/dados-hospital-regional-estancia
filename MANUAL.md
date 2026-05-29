@@ -32,14 +32,14 @@ Em uma frase: você cria o turno no início do plantão, preenche durante, e mar
 
 ## Conceitos básicos
 
-| Termo | O que significa |
-|---|---|
-| **Turno** | Janela de 12h. Diurno (D) das 7h às 19h; Noturno (N) das 19h às 7h. Cada turno = uma aba. |
-| **Aba** | Cada "página" da planilha (vê na barra de baixo). Tem nome `DD/MM/AAAA D` ou `DD/MM/AAAA N`. |
-| **Leito** | Onde o paciente está fisicamente. Os fixos são `V01-V03`, `A01-A08`, `ISOL01-ISOL02`. |
-| **Paciente ativo** | Paciente que ainda está internado. Não recebeu alta, não foi transferido, não foi a óbito. |
-| **Desfecho** | O que aconteceu com o paciente no turno: `ALTA`, `TRANSFERÊNCIA`, `ÓBITO`. Quem tem desfecho **não vai** para o próximo turno. |
-| **Aba anterior** | A aba de onde o sistema copia os pacientes ao criar um turno novo. |
+| Termo              | O que significa                                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Turno**          | Janela de 12h. Diurno (D) das 7h às 19h; Noturno (N) das 19h às 7h. Cada turno = uma aba.                                      |
+| **Aba**            | Cada "página" da planilha (vê na barra de baixo). Tem nome `DD/MM/AAAA D` ou `DD/MM/AAAA N`.                                   |
+| **Leito**          | Onde o paciente está fisicamente. Os fixos são `V01-V03`, `A01-A08`, `ISOL01-ISOL02`.                                          |
+| **Paciente ativo** | Paciente que ainda está internado. Não recebeu alta, não foi transferido, não foi a óbito.                                     |
+| **Desfecho**       | O que aconteceu com o paciente no turno: `ALTA`, `TRANSFERÊNCIA`, `ÓBITO`. Quem tem desfecho **não vai** para o próximo turno. |
+| **Aba anterior**   | A aba de onde o sistema copia os pacientes ao criar um turno novo.                                                             |
 
 ### De qual aba o sistema copia pacientes?
 
@@ -151,9 +151,9 @@ Aparece quando o turno anterior esperado não existe na planilha. Cenários:
 - **Esqueceram de criar o turno anterior** — alguém pulou um plantão. O sistema pergunta se quer criar em branco. Responda **Sim**, e depois preencha os pacientes manualmente baseado em qual foi a última aba existente. Se quiser, copie e cole linhas da última aba existente para economizar digitação.
 - **Você selecionou a data errada** — cancele, confira a data, e crie de novo.
 
-### Apareceu um leito com `_duplicado_1` (ou `_2`, etc.)
+### O mesmo leito apareceu em duas linhas
 
-Significa que no turno anterior **duas linhas tinham o mesmo leito**. Provavelmente alguém colocou um paciente novo numa linha sem perceber que o leito já estava ocupado.
+Significa que no turno anterior **duas linhas tinham o mesmo leito**. Provavelmente alguém colocou um paciente novo numa linha sem perceber que o leito já estava ocupado. O sistema copia os dois: um fica na linha normal do leito e o outro vai para o fim da lista, com o mesmo nome de leito.
 
 O que fazer:
 
@@ -161,7 +161,7 @@ O que fazer:
 2. Corrija a coluna LEITO do paciente "duplicado" para o leito real onde ele está, ou apague a linha se for erro.
 3. Avise o colega para evitar repetir.
 
-### Apareceu um leito com `_não_identificado_1`
+### Apareceu um leito com nome fora da lista padrão
 
 Significa que no turno anterior havia um paciente com **um nome de leito que não está na lista padrão** — por exemplo, alguém digitou `V0$` em vez de `V03`, ou usou um leito `_extra` que não existe.
 
