@@ -13,12 +13,13 @@
  * - Busca pacientes por LEITO (não cópia cega de linhas)
  * - Copia para linha correspondente do leito no modelo
  * - Detecta leitos duplicados (mesmo leito, múltiplos pacientes)
- * - Cria leitos extras automaticamente (_Extra_1, _Extra_2...)
+ * - Mantém sempre o nome original do leito (não renomeia duplicatas)
+ * - Duplicatas e leitos fora do modelo entram como extras no fim
  * - Ordena leitos extras: V → A → ISOL
  *
  * REGRAS:
  * - Remove pacientes com desfecho: ALTA, ÓBITO, TRANSFERÊNCIA
- * - Reseta campos pontuais: EVENTOS, Nº ATEND., ADMISSÃO, DESFECHO
+ * - Reseta campos pontuais de acordo com variável CAMPOS_RESETAR
  * - Mantém formatação zebrada
  *
  * @param {GoogleAppsScript.Spreadsheet.Sheet} abaDestino - Aba onde copiar pacientes
@@ -100,7 +101,7 @@ function _copiarPacientesAtivos(abaDestino, abaOrigem) {
 
       // Resetar campos de eventos pontuais
       // Determina o valor de cada coluna como configurado em CAMPOS_RESETAR
-      for (const [col, valorReset] of Object.entries(CONFIG.CAMPOS_RESETAR)) {
+      for (const [col, valorReset] of Object.entries(CAMPOS_RESETAR)) {
         const index = parseInt(col) - 1;
         linhaCopia[index] = valorReset;
       }
@@ -147,6 +148,11 @@ function _copiarPacientesAtivos(abaDestino, abaOrigem) {
     let countCopiados = 0; // Contagem de leitos copiados
     let countDuplicados = 0; // Contagem de leitos com mais de um paciente ativo
 
+    // Mapeia a linha de cada leito da aba destino em UMA única leitura.
+    // Antes, cada leito disparava uma busca célula a célula; agora a coluna
+    // é lida uma vez e as buscas viram consulta em memória (ver _mapearLinhasPorLeito).
+    const linhasPorLeito = _mapearLinhasPorLeito(abaDestino);
+
     /**
      * Iterando sobre cada item de pacientesPorLeito. Estrutura:
      *     "V02": [
@@ -159,8 +165,10 @@ function _copiarPacientesAtivos(abaDestino, abaOrigem) {
         `[INFO] Processando leito ${leito} (${pacientes.length} paciente(s))`,
       );
 
-      // Buscar linha do leito no modelo na aba destino
-      const linhaLeito = _encontrarLinhaDoLeito(abaDestino, leito);
+      // Buscar a linha do leito no mapa pré-carregado (consulta em memória).
+      // Normaliza com trim() para casar com as chaves do mapa e usa null
+      // como "não encontrado", preservando o contrato da verificação abaixo.
+      const linhaLeito = linhasPorLeito[leito.toString().trim()] ?? null;
 
       // Se existir leito na aba destino, ou seja, diferente de null
       if (linhaLeito !== null) {
@@ -192,11 +200,10 @@ function _copiarPacientesAtivos(abaDestino, abaOrigem) {
           for (let i = 1; i < pacientes.length; i++) {
             // Seleciona o paciente
             const pacienteExtra = pacientes[i];
-            // Cria novo nome para leito dinamicamente (baseado em regras pré-definidas em config)
-            const leitoExtra = `${leito}_duplicado_${i}`;
-            // Adiciona os leitos extras a um Object (dicionário)
+            // Adiciona como extra mantendo o NOME ORIGINAL do leito.
+            // A separação visual fica por conta da ordenação no PASSO 4.
             leitosExtras.push({
-              leito: leitoExtra,
+              leito: leito,
               dados: pacienteExtra.dados,
               nomePaciente: pacienteExtra.nomePaciente,
             });
@@ -204,14 +211,14 @@ function _copiarPacientesAtivos(abaDestino, abaOrigem) {
              * Estrutura de dados de leitosExtras:
              * leitosExtras = [
              *   {
-             *     leito: "V02_Extra_1",
+             *     leito: "V02",
              *     dados: [...],
              *     nomePaciente: "Maria Costa"
              *   },
              */
 
             Logger.log(
-              `[INFO] Criando leito extra: ${leitoExtra} para ${pacienteExtra.nomePaciente}`,
+              `[INFO] Duplicata de ${leito} adicionada como extra: ${pacienteExtra.nomePaciente}`,
             );
           }
         }
@@ -227,14 +234,11 @@ function _copiarPacientesAtivos(abaDestino, abaOrigem) {
         for (let i = 0; i < pacientes.length; i++) {
           // Seleciona o paciente
           const paciente = pacientes[i];
-          // Se for o primeiro paciente, utilizar nome de leito original
-          // Se não for, formar nome de leito extra dinamicamente
-          const leitoExtra = i === 0 ? leito : `${leito}_não_identificado_${i}`;
-          // Adiciona o paciente na lista de leitos extras
-          // Aqui, todos os leitos entram como leitos extras, inclusive a posição 0
-          // já que não houve correspondência encontrada na aba destino
+          // Todos entram como extras mantendo o NOME ORIGINAL do leito,
+          // inclusive eventuais duplicatas do mesmo leito fora do modelo.
+          // A separação visual fica por conta da ordenação no PASSO 4.
           leitosExtras.push({
-            leito: leitoExtra,
+            leito: leito,
             dados: paciente.dados,
             nomePaciente: paciente.nomePaciente,
           });
@@ -311,29 +315,65 @@ function _copiarPacientesAtivos(abaDestino, abaOrigem) {
 // ============================================================
 
 /**
- * Encontra a linha de um leito específico na aba
+ * Mapeia, em uma única leitura, a linha de cada leito da aba.
  *
- * @param {GoogleAppsScript.Spreadsheet.Sheet} aba - Aba onde buscar
- * @param {string} leito - Nome do leito (ex: "V02", "A05")
- * @returns {number|null} Número da linha ou null se não encontrado
+ * MOTIVAÇÃO (performance):
+ * Substitui a antiga busca célula a célula, que fazia um getValue() por
+ * linha e era chamada uma vez por leito — gerando, com a aba cheia,
+ * centenas de round-trips à API do Apps Script por cópia. Aqui a coluna
+ * de leitos é lida UMA vez (getValues()) e o restante é consulta em
+ * memória, custo desprezível.
+ *
+ * COMPORTAMENTO:
+ * - Lê a região fixa de dados (PRIMEIRA_LINHA_DADOS por MAX_LINHAS_DADOS).
+ * - Em caso de leito repetido na própria aba, mantém a PRIMEIRA ocorrência
+ *   (mesmo critério da busca linear anterior).
+ * - Chaves normalizadas com trim() para casar com a comparação do chamador.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} aba - Aba onde mapear os leitos
+ * @returns {Object<string, number>} Dicionário { leito: número da linha }
  */
-function _encontrarLinhaDoLeito(aba, leito) {
-  // Define a última linha da busca
-  const ultimaLinha = aba.getLastRow();
+function _mapearLinhasPorLeito(aba) {
+  // Lê a coluna de leitos inteira de uma vez (1 chamada à API).
+  // Região fixa de dados: PRIMEIRA_LINHA_DADOS até PRIMEIRA + MAX - 1.
+  const valores = aba
+    .getRange(
+      CONFIG.PRIMEIRA_LINHA_DADOS,
+      CONFIG.COL_LEITO,
+      CONFIG.MAX_LINHAS_DADOS,
+      1,
+    )
+    .getValues();
 
-  // Buscar da primeira linha de dados até o fim
-  for (let linha = CONFIG.PRIMEIRA_LINHA_DADOS; linha <= ultimaLinha; linha++) {
-    // Captura o valor da célula linha por linha para comparar depois
-    const valorCelula = aba.getRange(linha, CONFIG.COL_LEITO).getValue();
+  // Dicionário de saída: { "V02": 14, "A05": 18, ... }
+  const mapa = {};
 
-    // Se o valor capturado for igual ao leito informado, retorna o
-    // número da linha
-    if (valorCelula && valorCelula.toString().trim() === leito.trim()) {
-      return linha;
+  // Percorre o array 2D em memória (sem custo de API)
+  for (let i = 0; i < valores.length; i++) {
+    // Cada linha lida tem 1 célula → valores[i][0]
+    const valorCelula = valores[i][0];
+
+    // Ignora células vazias
+    if (!valorCelula) {
+      continue;
+    }
+
+    // Normaliza o nome do leito (mesma regra de comparação da busca antiga)
+    const leito = valorCelula.toString().trim();
+    if (leito === "") {
+      continue;
+    }
+
+    // Converte o índice do array (0-based) para número de linha da planilha
+    const linha = CONFIG.PRIMEIRA_LINHA_DADOS + i;
+
+    // Mantém apenas a primeira ocorrência de cada leito
+    if (mapa[leito] === undefined) {
+      mapa[leito] = linha;
     }
   }
-  // Retorna null se não encontrar correspondência
-  return null;
+
+  return mapa;
 }
 
 /**

@@ -63,7 +63,8 @@ function criarTurnoNoturno() {
  *   2. Valida pré-requisitos com alerts amigáveis
  *   3. Resolve aba anterior (com fallback se ausente)
  *   4. Pede confirmação final
- *   5. Chama o núcleo e mostra feedback
+ *   5. Sob trava de documento (re-checando existência), chama o
+ *      núcleo e mostra feedback
  *
  * @param {string} turno - "D" ou "N" (vem fixo do menu callback)
  */
@@ -153,20 +154,65 @@ function fluxoCriarTurno(turno) {
     }
 
     // ──────────────────────────────────────────────────────────
-    // PASSO 5: Executar e dar feedback
+    // PASSO 5: Executar e dar feedback (seção crítica)
     // ──────────────────────────────────────────────────────────
-    ss.toast("Criando turno...", "Mapa do Eixo", -1);
+    //
+    // Concorrência: a virada de turno acontece em horário fixo (7h
+    // e 19h), então dois usuários podem disparar a criação quase
+    // juntos. A checagem do PASSO 2b é cortesia (corta cedo, antes
+    // dos prompts), mas não basta: o estado pode mudar enquanto o
+    // usuário responde às caixas de diálogo dos passos 3 e 4.
+    //
+    // A trava de documento serializa esta seção entre todos os
+    // editores da planilha. Ela é pega SÓ AQUI, depois de todos os
+    // prompts — segurá-la durante um diálogo bloquearia o outro
+    // usuário pelo tempo todo de leitura. Dentro da trava, uma
+    // re-checagem de _abaExiste fecha de vez a janela de corrida:
+    // "checar + criar" vira atômico.
+    const lock = LockService.getDocumentLock();
+    try {
+      lock.waitLock(15000); // espera até 15s pela vez
+    } catch (erroLock) {
+      Logger.log("[INFO] Trava ocupada — outra criação de turno em andamento");
+      ui.alert(
+        "Sistema ocupado",
+        `Outra pessoa está criando um turno neste momento.\n\n` +
+          `Aguarde alguns segundos e tente novamente.`,
+        ui.ButtonSet.OK,
+      );
+      return;
+    }
 
-    const novaAba = criarNovoTurno(data, turno, abaAnterior);
+    try {
+      // Re-checagem DENTRO da trava: a aba pode ter sido criada por
+      // outro usuário enquanto este confirmava (passos 3 e 4).
+      if (_abaExiste(nomeNovaAba)) {
+        ui.alert(
+          "Aba já existe",
+          `A aba "${nomeNovaAba}" foi criada enquanto você confirmava.\n\n` +
+            `Nada foi sobrescrito.`,
+          ui.ButtonSet.OK,
+        );
+        return;
+      }
 
-    // Ativar a nova aba (navegação é responsabilidade da camada de UI)
-    ss.setActiveSheet(novaAba);
+      ss.toast("Criando turno...", "Mapa do Eixo", -1);
 
-    const mensagemSucesso = abaAnterior
-      ? `Turno ${descricaoTurno} criado com pacientes de ${nomeAbaAnterior}`
-      : `Turno ${descricaoTurno} criado em branco`;
+      const novaAba = criarNovoTurno(data, turno, abaAnterior);
 
-    ss.toast(mensagemSucesso, "✅ Sucesso", 5);
+      // Ativar a nova aba (navegação é responsabilidade da camada de UI)
+      ss.setActiveSheet(novaAba);
+
+      const mensagemSucesso = abaAnterior
+        ? `Turno ${descricaoTurno} criado com pacientes de ${nomeAbaAnterior}`
+        : `Turno ${descricaoTurno} criado em branco`;
+
+      ss.toast(mensagemSucesso, "✅ Sucesso", 5);
+    } finally {
+      // Libera sempre, mesmo se criarNovoTurno lançar. (O Apps Script
+      // também libera ao fim da execução; o finally só antecipa.)
+      lock.releaseLock();
+    }
   } catch (erro) {
     // Qualquer Error vindo do núcleo cai aqui — exibir como alert amigável
     Logger.log(`[ERRO] Fluxo abortado: ${erro.message}`);
