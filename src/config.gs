@@ -187,7 +187,7 @@ const CONFIG = {
       "ISOL05_extra",
     ],
 
-    VIA_AEREA: ["TOT\\VM", "TQT\\VM", "TQT+O2", "VE+O2", "VE\\AA"],
+    VIA_AEREA: ["TOT/VM", "TQT/VM", "TQT+O2", "VE+O2", "VE/AA", "TQT/AA"],
 
     EVENTOS: [
       "IOT",
@@ -276,7 +276,7 @@ const CONFIG = {
     LEITO: 150,
     PACIENTE: 150,
     DIAGNOSTICO: 200,
-    VIA_AEREA: 100,
+    VIA_AEREA: 120,
     EVENTOS: 150,
     VNI: 100,
     DESMAME_VM: 120,
@@ -288,7 +288,7 @@ const CONFIG = {
     PRESCRICAO: 95,
     ADMISSAO: 80,
     DESFECHO: 140,
-    AVALIACAO: 300, // Coluna mais larga para avaliação clínica detalhada
+    AVALIACAO: 400, // Coluna mais larga para avaliação clínica detalhada
   },
 
   // ============================================================
