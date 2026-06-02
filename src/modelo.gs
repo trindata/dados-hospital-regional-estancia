@@ -559,51 +559,35 @@ function _ajustarColunas(modelo) {
 // ============================================================
 
 /**
- * Protege a aba inteira, exceto os ranges editáveis pela equipe:
- * data/turno, equipe e dados de pacientes.
+ * Aplica proteção em modo AVISO à aba, deixando livres os ranges
+ * editáveis pela equipe (data/turno, equipe, dados de pacientes).
  *
- * Estratégia: cria proteção da aba toda, marca os ranges editáveis
- * como `UnprotectedRanges`, e remove todos os editores explícitos
- * da proteção — só o criador do script consegue editar células
- * protegidas. Ver REFERENCIA.md sobre por que esta abordagem em
- * vez de `setDomainEdit(false)`.
+ * Por que modo aviso e não removeEditors: a proteção por lista de
+ * editores nunca bloqueia o dono NEM o usuário que executa o script.
+ * Como os turnos são criados pelos próprios editores (fisioterapeutas)
+ * via menu, cada criador ficaria isento da proteção que ele mesmo cria.
+ * O modo aviso vale para todos por igual e cobre o objetivo real:
+ * prevenir edição acidental das células estruturais.
  *
- * @param {GoogleAppsScript.Spreadsheet.Sheet} modelo - Aba alvo
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} aba - Aba alvo
  * @throws {Error} Em falha técnica
  */
-function _protegerCelulas(modelo) {
-  Logger.log("[INFO] Configurando proteção de células...");
+function _protegerCelulas(aba) {
+  Logger.log("[INFO] Configurando proteção de células (modo aviso)...");
   try {
-    const rangeDataTurno = CONFIG.RANGE_DATA_TURNO; // Data e Turno
-    const rangeEquipe = CONFIG.RANGE_EQUIPE; // Fisioterapeuta, Enfermeiros, Médicos
-    const rangePacientes = CONFIG.RANGE_PACIENTES; // Dados dos pacientes
+    const protection = aba.protect().setDescription("Proteção do Mapa do Eixo");
 
-    // Proteger toda a aba
-    const protection = modelo
-      .protect()
-      .setDescription("Proteção do Mapa do Eixo");
+    // Ranges livres (editáveis sem aviso)
+    protection.setUnprotectedRanges([
+      aba.getRange(CONFIG.RANGE_DATA_TURNO),
+      aba.getRange(CONFIG.RANGE_EQUIPE),
+      aba.getRange(CONFIG.RANGE_PACIENTES),
+    ]);
 
-    // Definir ranges NÃO protegidos (editáveis por todos)
-    const rangesEditaveis = [
-      modelo.getRange(rangeDataTurno),
-      modelo.getRange(rangeEquipe),
-      modelo.getRange(rangePacientes),
-    ];
+    // Proteção baseada em aviso: uniforme para todos, sem isenções
+    protection.setWarningOnly(true);
 
-    protection.setUnprotectedRanges(rangesEditaveis);
-
-    // Remover TODOS os editores (exceto o criador)
-    // Isso garante que APENAS o criador pode editar células protegidas
-    protection.removeEditors(protection.getEditors());
-
-    // Se quiser adicionar editores específicos que podem editar células protegidas:
-    // protection.addEditor('email@exemplo.com');
-
-    Logger.log("[OK] Proteção configurada:");
-    Logger.log("  - Apenas o criador pode editar células protegidas");
-    Logger.log(`  - ${rangeDataTurno} (Data, Turno): editável por todos`);
-    Logger.log(`  - ${rangeEquipe} (Equipe): editável por todos`);
-    Logger.log(`  - ${rangePacientes} (Dados): editável por todos`);
+    Logger.log("[OK] Proteção em modo aviso configurada.");
   } catch (erro) {
     Logger.log(`[ERRO] Falha ao proteger células: ${erro.message}`);
     throw erro;
