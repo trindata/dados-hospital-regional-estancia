@@ -27,7 +27,7 @@
 // fora de CONFIG, consumido por util_padronizacao.gs.
 // ============================================================
 
-const PRIMEIRA = 13;
+const PRIMEIRA = 14;
 const MAX = 100;
 const ULTIMA = PRIMEIRA + MAX - 1;
 
@@ -42,7 +42,7 @@ const CONFIG = {
   // ============================================================
 
   RANGE_DATA_TURNO: "B2:B3", // Data e Turno
-  RANGE_EQUIPE: "B5:D7", // Fisioterapeuta, Enfermeiros, Médicos
+  RANGE_EQUIPE: "B5:D8", // Fisioterapeuta, Enfermeiros, Médicos
   RANGE_PACIENTES: `A${PRIMEIRA}:P${ULTIMA}`, // Dados dos pacientes
 
   // ============================================================
@@ -64,12 +64,13 @@ const CONFIG = {
   // ============================================================
   // COORDENADAS VERTICAIS (linhas)
   // ============================================================
-  LINHA_FISIOS: 5, // Linha da informação de fisioterapeutas
+  LINHA_FISIO_1: 5, // Linha da informação de fisioterapeutas
+  LINHA_FISIO_2: 6, // Linha da informação de fisioterapeutas
   LINHA_INFO_INICIO: 1, // Início da seção de informações (hospital, data, equipe)
-  LINHA_INFO_FIM: 7, // Fim da seção de informações
-  LINHA_INDICADORES_INICIO: 9, // Linha dos títulos dos indicadores
-  LINHA_INDICADORES_DADOS: 10, // Linha das fórmulas dos indicadores
-  LINHA_CABECALHO: 12, // Linha do cabeçalho da tabela de pacientes
+  LINHA_INFO_FIM: 8, // Fim da seção de informações
+  LINHA_INDICADORES_INICIO: 10, // Linha dos títulos dos indicadores
+  LINHA_INDICADORES_DADOS: 11, // Linha das fórmulas dos indicadores
+  LINHA_CABECALHO: 13, // Linha do cabeçalho da tabela de pacientes
   PRIMEIRA_LINHA_DADOS: PRIMEIRA, // Primeira linha de dados de pacientes
   MAX_LINHAS_DADOS: MAX, // Total de linhas disponíveis para dados
   ULTIMA_LINHA_DADOS: ULTIMA, // Última linha de dados (PRIMEIRA + MAX - 1)
@@ -98,8 +99,7 @@ const CONFIG = {
   TOTAL_COLUNAS: 16,
 
   // ============================================================
-  // HEADERS (LINHA 12)
-  // ============================================================
+  // HEADERS (LINHA 13)=====================================================
 
   HEADERS: [
     [
@@ -112,7 +112,7 @@ const CONFIG = {
       "DESMAME VM",
       "META MOTORA",
       "META RESP.",
-      "IMS PRÉVIO \\ ATUAL",
+      "IMS PRÉVIO - ATUAL",
       "DEFICIT MOTOR",
       "Nº ATEND.",
       "PRESCRIÇÃO",
@@ -187,7 +187,7 @@ const CONFIG = {
       "ISOL05_extra",
     ],
 
-    VIA_AEREA: ["TOT\\VM", "TQT\\VM", "TQT+O2", "VE+O2", "VE\\AA"],
+    VIA_AEREA: ["TOT/VM", "TQT/VM", "TQT+O2", "VE+O2", "VE/AA", "TQT/AA"],
 
     EVENTOS: [
       "IOT",
@@ -276,7 +276,7 @@ const CONFIG = {
     LEITO: 150,
     PACIENTE: 150,
     DIAGNOSTICO: 200,
-    VIA_AEREA: 100,
+    VIA_AEREA: 120,
     EVENTOS: 150,
     VNI: 100,
     DESMAME_VM: 120,
@@ -288,7 +288,7 @@ const CONFIG = {
     PRESCRICAO: 95,
     ADMISSAO: 80,
     DESFECHO: 140,
-    AVALIACAO: 300, // Coluna mais larga para avaliação clínica detalhada
+    AVALIACAO: 400, // Coluna mais larga para avaliação clínica detalhada
   },
 
   // ============================================================
@@ -347,6 +347,7 @@ const FORMATO_COLUNAS_DADOS = {
   },
   [CONFIG.COL_IMS]: {
     horizontalAlignment: "center",
+    numberFormat: "@", // Forçar formato de texto para evitar conversão automática
     width: CONFIG.LARGURAS.IMS,
   },
   [CONFIG.COL_PRESCRICAO]: {
