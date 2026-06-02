@@ -124,10 +124,10 @@ function _criarSecaoInformacoes(modelo) {
       .setFontSize(11)
       .setBackground(CONFIG.CORES.INFO_FUNDO);
 
-    // Linha 5: Fisioterapeuta
+    // Linha 5: Fisioterapeuta 1
     modelo
       .getRange("A5")
-      .setValue("Fisioterapeuta:")
+      .setValue("Fisioterapeuta 1:")
       .setFontWeight("bold")
       .setFontSize(11)
       .setFontColor(CONFIG.CORES.INFO_TITULO);
@@ -138,10 +138,10 @@ function _criarSecaoInformacoes(modelo) {
       .setValue("")
       .setBackground(CONFIG.CORES.INFO_FUNDO);
 
-    // Linha 6: Enfermeiros
+    // Linha 6: Fisioterapeuta 2
     modelo
       .getRange("A6")
-      .setValue("Enfermeiros:")
+      .setValue("Fisioterapeuta 2:")
       .setFontWeight("bold")
       .setFontSize(11)
       .setFontColor(CONFIG.CORES.INFO_TITULO);
@@ -152,16 +152,30 @@ function _criarSecaoInformacoes(modelo) {
       .setValue("")
       .setBackground(CONFIG.CORES.INFO_FUNDO);
 
-    // Linha 7: Médicos
+    // Linha 7: Enfermeiros
     modelo
       .getRange("A7")
-      .setValue("Médicos:")
+      .setValue("Enfermeiros:")
       .setFontWeight("bold")
       .setFontSize(11)
       .setFontColor(CONFIG.CORES.INFO_TITULO);
 
     modelo
       .getRange("B7:D7")
+      .merge()
+      .setValue("")
+      .setBackground(CONFIG.CORES.INFO_FUNDO);
+
+    // Linha 8: Médicos
+    modelo
+      .getRange("A8")
+      .setValue("Médicos:")
+      .setFontWeight("bold")
+      .setFontSize(11)
+      .setFontColor(CONFIG.CORES.INFO_TITULO);
+
+    modelo
+      .getRange("B8:D8")
       .merge()
       .setValue("")
       .setBackground(CONFIG.CORES.INFO_FUNDO);
@@ -338,14 +352,23 @@ function _aplicarValidacoes(modelo) {
   Logger.log("[INFO] Aplicando validações de dados...");
 
   try {
-    // FISIOTERAPEUTAS (Cabeçalho)
+    // FISIOTERAPEUTAS 1 (Cabeçalho)
     const ruleFisios = SpreadsheetApp.newDataValidation()
       .requireValueInList(FISIOTERAPEUTAS, true)
       .setAllowInvalid(false)
       .build();
     modelo
-      .getRange(CONFIG.LINHA_FISIOS, CONFIG.COL_FISIOS, 1, 1)
+      .getRange(CONFIG.LINHA_FISIO_1, CONFIG.COL_FISIOS, 1, 1)
       .setDataValidation(ruleFisios);
+
+    // FISIOTERAPEUTAS 2 (Cabeçalho)
+    const ruleFisios2 = SpreadsheetApp.newDataValidation()
+      .requireValueInList(FISIOTERAPEUTAS, true)
+      .setAllowInvalid(false)
+      .build();
+    modelo
+      .getRange(CONFIG.LINHA_FISIO_2, CONFIG.COL_FISIOS, 1, 1)
+      .setDataValidation(ruleFisios2);
 
     // LEITO (Coluna A)
     const ruleLeito = SpreadsheetApp.newDataValidation()
