@@ -1,5 +1,5 @@
 // ============================================================
-// config.gs — CONFIGURAÇÃO DO MAPA DO EIXO
+// config.gs — CONFIGURAÇÃO DO MAPA DA UTI
 // ============================================================
 // Sistema de Gestão do Mapa do Eixo da Fisioterapia UTI
 // Versão: 1.0
@@ -35,7 +35,7 @@ const CONFIG = {
   // ============================================================
   // IDENTIFICAÇÃO
   // ============================================================
-  MODELO_NOME: "_MODELO_MAPA_EIXO",
+  MODELO_NOME: "_MODELO_MAPA",
 
   // ============================================================
   // COORDENADAS GERAIS
@@ -59,6 +59,11 @@ const CONFIG = {
       formula: `=COUNTIF(O${PRIMEIRA}:O${ULTIMA};"TRANSFERÊNCIA")`,
     },
     { label: "Óbitos", formula: `=COUNTIF(O${PRIMEIRA}:O${ULTIMA};"ÓBITO")` },
+    { label: "Prescritos", formula: `=COUNTIF(M${PRIMEIRA}:M${ULTIMA};"SIM")` },
+    {
+      label: "Não Prescritos",
+      formula: `=COUNTIF(M${PRIMEIRA}:M${ULTIMA};"NÃO")`,
+    },
   ],
 
   // ============================================================
@@ -126,17 +131,16 @@ const CONFIG = {
   // LEITOS INICIAIS
   // ============================================================
   LEITOS_INICIAIS: [
-    "V01", // Vaga 1
-    "V02", // Vaga 2
-    "V03", // Vaga 3
-    "A01", // Box A01
-    "A02", // Box A02
-    "A03", // Box A03
-    "A04", // Box A04
-    "A05", // Box A05
-    "A06", // Box A06
-    "A07", // Box A07
-    "A08", // Box A08
+    "Box 01", // Box 01
+    "Box 02", // Box 02
+    "Box 03", // Box 03
+    "Box 04", // Box 04
+    "Box 05", // Box 05
+    "Box 06", // Box 06
+    "Box 07", // Box 07
+    "Box 08", // Box 08
+    "Box 09", // Box 09
+    "Box 10", // Box 10
     "ISOL01", // Isolamento 1
     "ISOL02", // Isolamento 2
   ],
@@ -147,44 +151,30 @@ const CONFIG = {
 
   VALIDACOES: {
     LEITO: [
-      "V01",
-      "V02",
-      "V03",
-      "V01_extra",
-      "V02_extra",
-      "V03_extra",
-      "V04_extra",
-      "V05_extra",
-      "V06_extra",
-      "V07_extra",
-      "V08_extra",
-      "V09_extra",
-      "V10_extra",
-      "A01",
-      "A02",
-      "A03",
-      "A04",
-      "A05",
-      "A06",
-      "A07",
-      "A08",
-      "A01_extra",
-      "A02_extra",
-      "A03_extra",
-      "A04_extra",
-      "A05_extra",
-      "A06_extra",
-      "A07_extra",
-      "A08_extra",
-      "A09_extra",
-      "A10_extra",
+      "Box 01",
+      "Box 02",
+      "Box 03",
+      "Box 01 novo",
+      "Box 02 novo",
+      "Box 03 novo",
+      "Box 04",
+      "Box 05",
+      "Box 06",
+      "Box 07",
+      "Box 08",
+      "Box 09",
+      "Box 10",
+      "Box 04 novo",
+      "Box 05 novo",
+      "Box 06 novo",
+      "Box 07 novo",
+      "Box 08 novo",
+      "Box 09 novo",
+      "Box 10 novo",
       "ISOL01",
       "ISOL02",
-      "ISOL01_extra",
-      "ISOL02_extra",
-      "ISOL03_extra",
-      "ISOL04_extra",
-      "ISOL05_extra",
+      "ISOL01 novo",
+      "ISOL02 novo",
     ],
 
     VIA_AEREA: ["TOT/VM", "TQT/VM", "TQT+O2", "VE+O2", "VE/AA", "TQT/AA"],

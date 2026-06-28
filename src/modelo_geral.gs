@@ -52,6 +52,9 @@ function _criarAbaModelo() {
     // Padronização de formatação
     padronizarColunasDados(modelo);
 
+    // Banner das linhas divisoras (depois de toda pintura da faixa)
+    _implementarLinhasDivisoras(modelo);
+
     // Configura congelamento e oculta aba
     modelo.setFrozenRows(CONFIG.LINHA_CABECALHO); // Congela até cabeçalho
     modelo.hideSheet();
@@ -412,35 +415,39 @@ function _aplicarValidacoes(modelo) {
       )
       .setDataValidation(ruleEventos);
 
-    // VNI (Coluna F)
-    const ruleVNI = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.VNI, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_VNI,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleVNI);
+    // VNI
+    if (CONFIG.COL_VNI && CONFIG.VALIDACOES.VNI) {
+      const ruleVNI = SpreadsheetApp.newDataValidation()
+        .requireValueInList(CONFIG.VALIDACOES.VNI, true)
+        .setAllowInvalid(false)
+        .build();
+      modelo
+        .getRange(
+          CONFIG.PRIMEIRA_LINHA_DADOS,
+          CONFIG.COL_VNI,
+          CONFIG.MAX_LINHAS_DADOS,
+          1,
+        )
+        .setDataValidation(ruleVNI);
+    }
 
-    // DESMAME VM (Coluna G)
-    const ruleDesmame = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.DESMAME_VM, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_DESMAME_VM,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleDesmame);
+    // DESMAME VM
+    if (CONFIG.COL_DESMAME_VM && CONFIG.VALIDACOES.DESMAME_VM) {
+      const ruleDesmame = SpreadsheetApp.newDataValidation()
+        .requireValueInList(CONFIG.VALIDACOES.DESMAME_VM, true)
+        .setAllowInvalid(false)
+        .build();
+      modelo
+        .getRange(
+          CONFIG.PRIMEIRA_LINHA_DADOS,
+          CONFIG.COL_DESMAME_VM,
+          CONFIG.MAX_LINHAS_DADOS,
+          1,
+        )
+        .setDataValidation(ruleDesmame);
+    }
 
-    // META MOTORA (Coluna H)
+    // META MOTORA
     const ruleMetaMotora = SpreadsheetApp.newDataValidation()
       .requireValueInList(CONFIG.VALIDACOES.META_MOTORA, true)
       .setAllowInvalid(false)
@@ -454,7 +461,7 @@ function _aplicarValidacoes(modelo) {
       )
       .setDataValidation(ruleMetaMotora);
 
-    // META RESP. (Coluna I)
+    // META RESP.
     const ruleMetaResp = SpreadsheetApp.newDataValidation()
       .requireValueInList(CONFIG.VALIDACOES.META_RESP, true)
       .setAllowInvalid(false)
@@ -468,7 +475,7 @@ function _aplicarValidacoes(modelo) {
       )
       .setDataValidation(ruleMetaResp);
 
-    // DEFICIT MOTOR (Coluna K)
+    // DEFICIT MOTOR
     const ruleDeficit = SpreadsheetApp.newDataValidation()
       .requireValueInList(CONFIG.VALIDACOES.DEFICIT_MOTOR, true)
       .setAllowInvalid(false)
@@ -482,7 +489,7 @@ function _aplicarValidacoes(modelo) {
       )
       .setDataValidation(ruleDeficit);
 
-    // PRESCRIÇÃO (Coluna M)
+    // PRESCRIÇÃO
     const rulePrescricao = SpreadsheetApp.newDataValidation()
       .requireValueInList(CONFIG.VALIDACOES.PRESCRICAO, true)
       .setAllowInvalid(false)
@@ -496,7 +503,7 @@ function _aplicarValidacoes(modelo) {
       )
       .setDataValidation(rulePrescricao);
 
-    // ADMISSÃO (Coluna N)
+    // ADMISSÃO
     const ruleAdmissao = SpreadsheetApp.newDataValidation()
       .requireValueInList(CONFIG.VALIDACOES.ADMISSAO, true)
       .setAllowInvalid(false)
@@ -510,7 +517,7 @@ function _aplicarValidacoes(modelo) {
       )
       .setDataValidation(ruleAdmissao);
 
-    // DESFECHO (Coluna O)
+    // DESFECHO
     const ruleDesfecho = SpreadsheetApp.newDataValidation()
       .requireValueInList(CONFIG.VALIDACOES.DESFECHO, true)
       .setAllowInvalid(false)
@@ -555,8 +562,12 @@ function _ajustarColunas(modelo) {
     modelo.setColumnWidth(CONFIG.COL_DIAGNOSTICO, CONFIG.LARGURAS.DIAGNOSTICO);
     modelo.setColumnWidth(CONFIG.COL_VIA_AEREA, CONFIG.LARGURAS.VIA_AEREA);
     modelo.setColumnWidth(CONFIG.COL_EVENTOS, CONFIG.LARGURAS.EVENTOS);
-    modelo.setColumnWidth(CONFIG.COL_VNI, CONFIG.LARGURAS.VNI);
-    modelo.setColumnWidth(CONFIG.COL_DESMAME_VM, CONFIG.LARGURAS.DESMAME_VM);
+    if (CONFIG.COL_VNI) {
+      modelo.setColumnWidth(CONFIG.COL_VNI, CONFIG.LARGURAS.VNI);
+    }
+    if (CONFIG.COL_DESMAME_VM) {
+      modelo.setColumnWidth(CONFIG.COL_DESMAME_VM, CONFIG.LARGURAS.DESMAME_VM);
+    }
     modelo.setColumnWidth(CONFIG.COL_META_MOTORA, CONFIG.LARGURAS.META_MOTORA);
     modelo.setColumnWidth(CONFIG.COL_META_RESP, CONFIG.LARGURAS.META_RESP);
     modelo.setColumnWidth(CONFIG.COL_IMS, CONFIG.LARGURAS.IMS);
@@ -613,6 +624,73 @@ function _protegerCelulas(aba) {
     Logger.log("[OK] Proteção em modo aviso configurada.");
   } catch (erro) {
     Logger.log(`[ERRO] Falha ao proteger células: ${erro.message}`);
+    throw erro;
+  }
+}
+
+/**
+ * Aplica o banner visual nas linhas divisoras da seção de dados.
+ *
+ * Varre a coluna LEITO da faixa de dados; toda linha cujo valor conste
+ * em CONFIG.LINHAS_DIVISORAS é mesclada (TOTAL_COLUNAS) e formatada
+ * como banner. O texto já vem semeado no LEITOS_INICIAIS — esta função
+ * só detecta e formata, não escreve rótulo.
+ *
+ * Idempotente: roda no modelo E em cada turno gerado (a zebra do turno
+ * repinta a faixa e apaga o amarelo, então o banner é reaplicado).
+ * Por isso o breakApart antes do merge — o clone já vem mesclado.
+ *
+ * Guarda: área sem CONFIG.LINHAS_DIVISORAS (ex.: Eixo) → no-op.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} aba - Aba alvo (modelo ou turno)
+ */
+function _implementarLinhasDivisoras(aba) {
+  // Guarda: sem lista de divisores, não aplica nada.
+  if (
+    !Array.isArray(CONFIG.LINHAS_DIVISORAS) ||
+    CONFIG.LINHAS_DIVISORAS.length === 0
+  ) {
+    return;
+  }
+
+  Logger.log("[INFO] Aplicando linhas divisoras...");
+
+  try {
+    // Lê a coluna LEITO inteira numa única leitura (1 chamada à API).
+    const valores = aba
+      .getRange(
+        CONFIG.PRIMEIRA_LINHA_DADOS,
+        CONFIG.COL_LEITO,
+        CONFIG.MAX_LINHAS_DADOS,
+        1,
+      )
+      .getValues();
+
+    const divisores = CONFIG.LINHAS_DIVISORAS;
+    let aplicadas = 0;
+
+    for (let i = 0; i < valores.length; i++) {
+      const valor = (valores[i][0] || "").toString().trim();
+
+      // Só formata linhas cujo valor casa com a lista de divisores.
+      if (valor === "" || divisores.indexOf(valor) === -1) {
+        continue;
+      }
+
+      const linha = CONFIG.PRIMEIRA_LINHA_DADOS + i;
+      const range = aba.getRange(linha, 1, 1, CONFIG.TOTAL_COLUNAS);
+
+      // Idempotência: desfaz mescla anterior (clone já vem mesclado) e refaz.
+      range.breakApart();
+      range.merge();
+
+      aplicarFormatacao(range, FORMATO_LINHA_DIVISORA);
+      aplicadas++;
+    }
+
+    Logger.log(`[OK] ${aplicadas} linha(s) divisora(s) aplicada(s)`);
+  } catch (erro) {
+    Logger.log(`[ERRO] Falha ao aplicar linhas divisoras: ${erro.message}`);
     throw erro;
   }
 }

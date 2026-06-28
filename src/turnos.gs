@@ -98,6 +98,10 @@ function criarNovoTurno(data, turno, abaAnterior) {
     aplicarZebraDados(novaAba);
     padronizarColunasDados(novaAba);
 
+    // Reaplica o banner: a zebra acima repinta a faixa e apaga o amarelo.
+    // Guarda interna torna isto inócuo em áreas sem divisores (Eixo).
+    _implementarLinhasDivisoras(novaAba);
+
     // Proteger células contra alterações indevidas.
     _protegerCelulas(novaAba);
 

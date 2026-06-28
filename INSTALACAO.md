@@ -1,8 +1,8 @@
 # Tutorial de Instalação — Mapa do Eixo
 
-Este tutorial é para instalar o Mapa do Eixo numa planilha vazia. Ao final, a planilha vai ter um menu próprio (`📋 Mapa do Eixo`) com os botões de criação de turno Diurno e Noturno funcionando.
+Este tutorial instala o sistema **Mapa do Eixo** numa planilha vazia. O sistema atende várias áreas do hospital (Eixo, UTI, internamentos, estabilização) — cada área vive na sua própria planilha. A instalação é a mesma para todas: muda apenas **dois** dos arquivos (o config e a interface da área). Ao final, a planilha vai ter um menu próprio (`📋 GERAR MAPA`) com a criação de mapas funcionando.
 
-A instalação é feita uma única vez. Depois, o uso é só pelo menu.
+A instalação é feita uma única vez por área. Depois, o uso é só pelo menu. Para instalar outra área, repita este tutorial numa nova planilha.
 
 ---
 
@@ -12,11 +12,30 @@ A instalação é feita uma única vez. Depois, o uso é só pelo menu.
 
 - Conta Google ativa, com acesso ao Google Drive e Planilhas
 - Computador (não funciona bem pelo celular — alguns passos não estão disponíveis no app móvel)
-- Acesso aos 8 arquivos de código do projeto
+- Acesso aos arquivos de código do projeto (são 8 por área: 6 comuns a todas + o config e a interface da sua área)
 
 **Tempo estimado:** 10 minutos, sem pressa.
 
 **Se algo der errado:** não se preocupe em "consertar" — anote em que passo aconteceu, tire um print da tela se conseguir, e fale com o Igor.
+
+---
+
+## Escolha a área (faça isto primeiro)
+
+O sistema é o mesmo para todas as áreas; o que muda por área são **dois arquivos**: o `config` (estrutura e regras daquela área) e a `interface` (que define se a área tem turno Diurno/Noturno ou um mapa por dia).
+
+Localize a sua área na tabela e anote o nome do **config** e da **interface** — você vai usá-los no Passo 3, e o menu gerado será o da última coluna.
+
+| Área                     | config                  | interface               | menu gerado            |
+| ------------------------ | ----------------------- | ----------------------- | ---------------------- |
+| Eixo                     | `config_eixo`           | `interface_turno_duplo` | ☀️ Diurno / 🌙 Noturno |
+| UTI                      | `config_uti`            | `interface_turno_duplo` | ☀️ Diurno / 🌙 Noturno |
+| Estabilização Pediátrica | `config_estab_ped`      | `interface_turno_duplo` | ☀️ Diurno / 🌙 Noturno |
+| Internamento Clínico     | `config_int_clinico`    | `interface_turno_unico` | 📅 Criar mapa do dia   |
+| Internamento Pediátrico  | `config_int_pediatrico` | `interface_turno_unico` | 📅 Criar mapa do dia   |
+| Internamento Cirúrgico   | `config_int_cirurgico`  | `interface_turno_unico` | 📅 Criar mapa do dia   |
+
+> **Turno duplo × turno único:** áreas de turno duplo geram duas planilhas por dia (Diurno e Noturno); áreas de turno único geram uma planilha por dia. O resto da instalação é idêntico.
 
 ---
 
@@ -26,7 +45,7 @@ O que vamos fazer, em ordem:
 
 1. Criar uma planilha em branco no Google Drive
 2. Abrir o editor de scripts (Apps Script) dessa planilha
-3. Criar 8 arquivos no editor e colar o código de cada um
+3. Criar os 8 arquivos no editor (6 comuns + os 2 da sua área) e colar o código de cada um
 4. Atualizar a lista de fisioterapeutas com os CREFITOs reais
 5. Autorizar permissões e rodar o setup inicial
 6. Validar que o menu apareceu na planilha
@@ -39,10 +58,11 @@ O que vamos fazer, em ordem:
 1. Abra o Google Drive ([drive.google.com](https://drive.google.com)).
 2. Clique no botão **+ Novo** (canto superior esquerdo) → **Planilhas Google** → **Planilha em branco**.
 3. Uma nova aba do navegador vai abrir com uma planilha sem nome.
-4. Clique no título "Planilha sem título" (canto superior esquerdo) e renomeie para algo como:
+4. Clique no título "Planilha sem título" (canto superior esquerdo) e renomeie incluindo a sua área, por exemplo:
    ```
-   Mapa do Eixo - Fisioterapia - Hospital Jessé Fontes
+   Mapa - <Área> - Hospital Jessé Fontes
    ```
+   (ex.: `Mapa - Internamento Clínico - Hospital Jessé Fontes`)
 5. **Não feche essa aba.** Vamos voltar para ela ao final.
 
 ![Planilha em branco recém-criada com o nome aplicado](imgs/manual_img1.png)
@@ -67,7 +87,7 @@ Aqui é onde a maior parte do trabalho acontece. O **Apps Script** é um editor 
 
 ![Editor do Apps Script recém-aberto, mostrando o arquivo Código.gs e a função vazia](imgs/manual_img3_doodle.png)
 
-4. Clique no nome **"Projeto sem título"** (no topo) e renomeie para `Mapa do Eixo`. Confirme.
+4. Clique no nome **"Projeto sem título"** (no topo) e renomeie para `Mapa - <Área>` (ex.: `Mapa - Internamento Clínico`). Confirme.
 
 ✅ Ao fim deste passo: editor aberto numa aba separada, projeto renomeado.
 
@@ -75,7 +95,7 @@ Aqui é onde a maior parte do trabalho acontece. O **Apps Script** é um editor 
 
 ## Passo 3 — Criar os 8 arquivos de código
 
-Esta é a parte mais demorada. Vamos criar 8 arquivos no editor, um de cada vez, copiando o conteúdo de cada um do repositório.
+Esta é a parte mais demorada. Vamos criar 8 arquivos no editor, um de cada vez, copiando o conteúdo de cada um do repositório. Seis são comuns a todas as áreas; dois são da sua área (o config e a interface da tabela de "Escolha a área").
 
 ### 3.1. Apagar o arquivo padrão
 
@@ -87,50 +107,52 @@ Esta é a parte mais demorada. Vamos criar 8 arquivos no editor, um de cada vez,
 
 ### 3.2. Criar cada arquivo
 
-Você vai criar 8 arquivos com estes nomes exatos (sem o `.gs` — o editor adiciona sozinho):
+Você vai criar 8 arquivos com estes nomes exatos (sem o `.gs` — o editor adiciona sozinho). Os dois marcados com ← dependem da sua área (veja a tabela em "Escolha a área"):
 
-1. `config`
+1. `config_<área>` ← config da sua área
 2. `fisioterapeutas`
 3. `utils`
 4. `util_padronizacao`
-5. `modelo`
+5. `modelo_geral`
 6. `pacientes`
 7. `turnos`
-8. `interface`
+8. `interface_turno_<modo>` ← interface da sua área (`_duplo` ou `_unico`)
 
 Para **cada um** dos 8 arquivos, repita estes passos:
 
 1. No lado esquerdo, ao lado de **Arquivos**, clique no botão **+** (símbolo de mais).
 2. Escolha **Script** (não escolha HTML).
-3. Digite o nome exato do arquivo (ex: `config`) e pressione **Enter**.
+3. Digite o nome exato do arquivo (ex: `config_int_clinico`) e pressione **Enter**.
 4. Um novo arquivo abre no centro, com um esqueleto de função vazia.
 5. **Selecione tudo** (Ctrl+A no Windows / Cmd+A no Mac) e **apague** (Delete).
-6. Vá ao repositório / pasta do Drive, abra o arquivo correspondente (ex: `config.gs`), e **copie todo o conteúdo** (Ctrl+A → Ctrl+C).
+6. Vá ao repositório / pasta do Drive, abra o arquivo correspondente (ex: `config_int_clinico.gs`), e **copie todo o conteúdo** (Ctrl+A → Ctrl+C).
 7. Volte ao editor do Apps Script e **cole** no arquivo vazio (Ctrl+V).
 8. Salve com **Ctrl+S** (ou Cmd+S no Mac). Você deve ver uma confirmação rápida no topo.
 
 ![Botão "+" ao lado de Arquivos, com a opção "Script" destacada](imgs/manual_img5_doodle.png)
 
-![Arquivo `config` criado e preenchido, com indicação visual de "salvo"](imgs/manual_img6.png)
+![Arquivo de config criado e preenchido, com indicação visual de "salvo"](imgs/manual_img6.png)
 
 ### 3.3. Validação intermediária
 
-Quando terminar os 8 arquivos, a lista de **Arquivos** no lado esquerdo deve mostrar exatamente isto, na ordem que você criou:
+Quando terminar os 8 arquivos, a lista de **Arquivos** no lado esquerdo deve mostrar exatamente isto — substituindo o config e a interface pelos nomes da sua área:
 
 ```
-config.gs
+config_<área>.gs            (ex.: config_int_clinico.gs)
 fisioterapeutas.gs
 utils.gs
 util_padronizacao.gs
-modelo.gs
+modelo_geral.gs
 pacientes.gs
 turnos.gs
-interface.gs
+interface_turno_<modo>.gs   (ex.: interface_turno_unico.gs)
 ```
 
 ![Lista completa dos 8 arquivos no painel lateral](imgs/manual_img7.png)
 
-> **Atenção:** os nomes prSiecisam ser **exatamente** esses. Se você digitou `Config` (com C maiúsculo) ou `fisioterapeuta` (sem o "s"), o sistema pode não funcionar. Caso veja qualquer diferença, clique nos três pontinhos do arquivo, escolha **Renomear** e corrija.
+> **Atenção:** os nomes precisam ser **exatamente** esses. Se você digitou `Config` (com C maiúsculo) ou `fisioterapeuta` (sem o "s"), o sistema pode não funcionar. Confira também que você criou **o config e a interface da sua área** (não os de outra área) — é o erro mais comum. Caso veja qualquer diferença, clique nos três pontinhos do arquivo, escolha **Renomear** e corrija.
+
+> **Nunca coloque dois configs ou duas interfaces no mesmo projeto.** Cada planilha leva exatamente um config e uma interface. Misturar arquivos de áreas diferentes quebra o sistema de forma silenciosa.
 
 ✅ Ao fim deste passo: os 8 arquivos estão criados, preenchidos com o código correspondente, e salvos.
 
@@ -160,7 +182,7 @@ Esta é a única customização necessária. O arquivo `fisioterapeutas.gs` tem 
 
 ## Passo 5 — Autorizar permissões e rodar o setup
 
-Agora vamos rodar a função que cria a estrutura visual do Mapa do Eixo na planilha. Na primeira execução, o Google vai pedir permissões — é normal.
+Agora vamos rodar a função que cria a estrutura visual do Mapa na planilha. Na primeira execução, o Google vai pedir permissões — é normal.
 
 ### 5.1. Selecionar a função
 
@@ -172,14 +194,14 @@ Agora vamos rodar a função que cria a estrutura visual do Mapa do Eixo na plan
 3. Clique no botão **Executar** (▶), ao lado do dropdown.
 4. Vai aparecer uma janela: **"Autorização necessária"** — clique em **Revisar permissões**.
 
-![Arquivo modelo selecionado, função _criarAbaModelo selecionada e executar destacado](imgs/manual_img9_doodle.png)
+![Arquivo modelo_geral selecionado, função _criarAbaModelo selecionada e executar destacado](imgs/manual_img9_doodle.png)
 
 ### 5.3. Autorizar (primeira vez apenas)
 
 5. Uma nova janela do Google abre pedindo para escolher a conta. Escolha sua conta Google (a mesma da planilha).
 6. Pode aparecer uma tela amarela/laranja com o aviso **"Google não verificou este app"**. Isso é esperado — não estamos publicando o app, é uso pessoal.
    - Clique em **Avançado** (link pequeno no canto inferior).
-   - Clique em **Acessar Mapa do Eixo (não seguro)**.
+   - Clique em **Acessar Mapa - <Área> (não seguro)** (o nome que você deu ao projeto no Passo 2).
 
    > Esse "não seguro" assusta mas significa apenas que o app não passou por revisão pública do Google — o que faz sentido, já que é um script interno da sua equipe. Você está autorizando seu próprio script a usar suas próprias planilhas.
 
@@ -221,24 +243,27 @@ Agora vamos rodar a função que cria a estrutura visual do Mapa do Eixo na plan
 4. Na barra de menus superior, ao lado de **Ajuda**, deve aparecer um novo item:
 
    ```
-   📋 Mapa do Eixo
+   📋 GERAR MAPA
    ```
 
-5. Clique nele. Devem aparecer duas opções:
-   - ☀️ Criar turno DIURNO
-   - 🌙 Criar turno NOTURNO
+5. Clique nele. As opções dependem da sua área (veja a tabela em "Escolha a área"):
+   - **Áreas de turno duplo (Eixo, UTI):**
+     - ☀️ Criar turno DIURNO
+     - 🌙 Criar turno NOTURNO
+   - **Áreas de turno único (internamentos, estabilização):**
+     - 📅 Criar mapa do dia
 
-![Barra de menus da planilha mostrando o menu "📋 Mapa do Eixo" expandido com as duas opções](imgs/manual_img15.png)
+![Barra de menus da planilha mostrando o menu "📋 GERAR MAPA" expandido com as opções da área](imgs/manual_img15.png)
 
 ### Teste rápido
 
-6. Para confirmar que tudo está funcionando, clique em **☀️ Criar turno DIURNO**.
+6. Para confirmar que tudo está funcionando, clique na opção de criação da sua área (**☀️ Criar turno DIURNO** no turno duplo, ou **📅 Criar mapa do dia** no turno único).
 7. Uma caixa pergunta pela data — deixe em branco e clique **OK** (usa a data de hoje).
-8. Outra caixa pergunta se quer criar em branco (já que não existe turno anterior na primeira vez) — clique **Sim**.
+8. Outra caixa pergunta se quer criar em branco (já que não existe planilha anterior na primeira vez) — clique **Sim**.
 9. Confirmação final — clique **Sim**.
-10. Em alguns segundos, uma nova aba aparece na parte inferior da planilha com o nome `DD/MM/AAAA D`, mostrando o Mapa do Eixo pronto para uso.
+10. Em alguns segundos, uma nova aba aparece na parte inferior da planilha com o nome `DD/MM/AAAA D`, mostrando o mapa pronto para uso.
 
-![Aba recém-criada com o Mapa do Eixo, mostrando seção de informações, indicadores e cabeçalho da tabela](imgs/manual_img16.png)
+![Aba recém-criada com o mapa, mostrando seção de informações, indicadores e cabeçalho da tabela](imgs/manual_img16.png)
 
 ✅ Ao fim deste passo: o sistema está instalado e funcionando.
 
@@ -258,7 +283,7 @@ Agora que o sistema funciona, libere o acesso para quem vai usar.
 ![Botão de compartilhamento](imgs/manual_img17.png)
 ![Caixa de diálogo de compartilhamento com permissão "Editor" selecionada](imgs/manual_img18_doodle.png)
 
-> **Importante:** o sistema foi projetado para até **2 editores ativos ao mesmo tempo**. Adicionar mais pessoas com permissão de Editor não é problema — só evite que mais de 2 estejam editando turnos simultaneamente, para não dar conflito.
+> **Importante:** o sistema foi projetado para até **2 editores ativos ao mesmo tempo**. Adicionar mais pessoas com permissão de Editor não é problema — só evite que mais de 2 estejam criando mapas simultaneamente (sobretudo na virada de turno), para não dar conflito.
 
 ✅ Ao fim deste passo: a equipe tem acesso e o sistema está pronto para uso diário.
 
@@ -266,15 +291,16 @@ Agora que o sistema funciona, libere o acesso para quem vai usar.
 
 ## Resolução de problemas
 
-### O menu `📋 Mapa do Eixo` não aparece na planilha
+### O menu `📋 GERAR MAPA` não aparece na planilha
 
 - Verifique se você **salvou** todos os arquivos no editor (Ctrl+S em cada).
 - **Recarregue** a planilha (F5). O menu só aparece após o reload, não automaticamente após salvar.
-- Se mesmo assim não aparecer, abra novamente **Extensões → Apps Script**, verifique se os 8 arquivos ainda estão lá com os nomes corretos.
+- Se mesmo assim não aparecer, abra novamente **Extensões → Apps Script**, verifique se os 8 arquivos ainda estão lá com os nomes corretos (incluindo o config e a interface da sua área).
 
 ### Erro ao executar `_criarAbaModelo`
 
 - Verifique se os 8 arquivos foram criados com os nomes **exatos** listados no passo 3.
+- Confirme que há **apenas um** config e **apenas uma** interface no projeto (nunca os de duas áreas juntos).
 - Verifique se você colou o **conteúdo inteiro** de cada arquivo (às vezes a cópia falha).
 - Tire print do erro no registro de execução e envie para o Igor.
 
@@ -284,11 +310,16 @@ Agora que o sistema funciona, libere o acesso para quem vai usar.
 - Tente usar uma conta Google pessoal (Gmail comum) para a instalação inicial.
 - Se não for possível, fale com o Igor para uma alternativa.
 
-### O turno foi criado mas está sem leitos ou sem formatação
+### O mapa foi criado mas está sem leitos ou sem formatação
 
-- Provavelmente o arquivo `config.gs` ou `modelo.gs` foi colado incompleto.
-- Vá no editor, abra o `config.gs`, role até o fim e veja se termina com `};`.
+- Provavelmente o arquivo `config_<área>.gs` ou `modelo_geral.gs` foi colado incompleto.
+- Vá no editor, abra o `config_<área>.gs`, role até o fim e veja se termina com `};`.
 - Se não terminar, refaça a cópia desse arquivo e rode `_criarAbaModelo` novamente.
+
+### As faixas amarelas de enfermaria não apareceram (áreas de internamento)
+
+- Isso é uma questão do config da área, não da instalação. Refaça a cópia do `config_<área>.gs` (inteiro) e rode `_criarAbaModelo` de novo.
+- Se persistir, tire print e fale com o Igor.
 
 ### Outro problema
 
@@ -298,6 +329,6 @@ Tire print da tela e do registro de execução do Apps Script, anote em qual pas
 
 ## Pronto!
 
-A instalação está completa. Para o uso diário, basta usar o menu **📋 Mapa do Eixo** na planilha — não precisa voltar no editor de scripts.
+A instalação está completa. Para o uso diário, basta usar o menu **📋 GERAR MAPA** na planilha — não precisa voltar no editor de scripts.
 
 A documentação técnica do sistema fica nos arquivos `README.md` e `REFERENCIA.md` do repositório.

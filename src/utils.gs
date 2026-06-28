@@ -51,6 +51,32 @@ function _obterNomeAbaAnterior(data, turno) {
 }
 
 /**
+ * Calcula nome da aba anterior no modo TURNO ÚNICO (diário).
+ *
+ * Diferente de `_obterNomeAbaAnterior`, aqui não há conceito de turno
+ * D/N: o setor opera UMA aba por dia. A letra "D" no nome é apenas
+ * estética — a lógica é centrada na DATA. A aba anterior é, sempre e
+ * deterministicamente, o dia anterior.
+ *
+ * Contrato espelha `_obterNomeAbaAnterior`: função PURA de cálculo,
+ * devolve só o nome. Checagem de existência e fallback (criar em
+ * branco) ficam na camada de interface.
+ *
+ * @param {Date} data - Data do mapa atual
+ * @returns {string} Nome da aba anterior (dia anterior, sufixo diário)
+ *
+ * @example
+ * // Mapa de hoje 28/06 → anterior é 27/06
+ * _obterNomeAbaAnteriorTurnoUnico(new Date(2026, 5, 28));
+ * // Retorna: "27/06/2026 D"
+ */
+function _obterNomeAbaAnteriorTurnoUnico(data) {
+  const ontem = new Date(data);
+  ontem.setDate(ontem.getDate() - 1);
+  return _formatarNomeAba(ontem, SUFIXO_ABA_DIARIA);
+}
+
+/**
  * Pinta linhas alternadas (zebra striping) num intervalo de linhas.
  *
  * Utilitário genérico, totalmente parametrizado. Wrapper de domínio:

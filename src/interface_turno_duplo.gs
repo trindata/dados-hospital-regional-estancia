@@ -27,7 +27,7 @@
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu("📋 Mapa do Eixo")
+  ui.createMenu("📋 GERAR MAPA")
     .addItem("☀️ Criar turno DIURNO", "criarTurnoDiurno")
     .addItem("🌙 Criar turno NOTURNO", "criarTurnoNoturno")
     .addToUi();
