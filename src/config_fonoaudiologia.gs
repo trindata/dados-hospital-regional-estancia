@@ -258,6 +258,8 @@ const CONFIG = {
     // Ordenada da consistência mais restritiva para a mais livre.
     VIA_ALIMENTACAO: [
       "VO LÍQUIDA",
+      "VO LÍQUIDA NÉCTAR",
+      "VO LÍQUIDA MEL",
       "LIQUIDIFICADA + LÍQUIDOS",
       "LIQUIDIFICADA + LÍQUIDOS NÉCTAR",
       "LIQUIDIFICADA + LÍQUIDOS MEL",
@@ -270,6 +272,11 @@ const CONFIG = {
       "BRANDA COM PROTEÍNA TRITURADA + LÍQUIDOS",
       "BRANDA + LÍQUIDOS",
       "VO LIVRE",
+      // Pediatria
+      "VAA EXCLUSIVA",
+      "DIETA MISTA",
+      "VO MAMADEIRA",
+      "VO ALEITAMENTO MATERNO",
     ],
 
     FOIS: ["1", "2", "3", "4", "5", "6", "7"],
