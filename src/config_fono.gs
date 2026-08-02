@@ -133,18 +133,47 @@ const CONFIG = {
   // LEITOS INICIAIS
   // ============================================================
   LEITOS_INICIAIS: [
-    "Box 01", // Box 01
-    "Box 02", // Box 02
-    "Box 03", // Box 03
-    "Box 04", // Box 04
-    "Box 05", // Box 05
-    "Box 06", // Box 06
-    "Box 07", // Box 07
-    "Box 08", // Box 08
-    "Box 09", // Box 09
-    "Box 10", // Box 10
-    "ISOL01", // Isolamento 1
-    "ISOL02", // Isolamento 2
+    "INTERNAMENTO CLÍNICO",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "INTERNAMENTO CIRÚRGICO",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "UTI",
+    "",
+    "",
+    "",
+    "ESTABILIZAÇÃO ADULTA",
+    "",
+    "",
+    "",
+    "",
+    "ESTABILIZAÇÃO PEDIÁTRICA",
+    "",
+    "",
+    "INTERNAMENTO PEDIÁTRICO",
+    "",
+    "",
+    "AZUL",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "CENTRO CIRÚRGICO",
+    "",
+    "",
+    "",
   ],
 
   // ============================================================
@@ -152,6 +181,69 @@ const CONFIG = {
   // ============================================================
 
   VALIDACOES: {
+    LEITO: [
+      "A 01",
+      "A 02",
+      "A 03",
+      "A 04",
+      "A 05",
+      "C 01",
+      "C 02",
+      "C 03",
+      "C 04",
+      "C 05",
+      "D 01",
+      "D 02",
+      "D 03",
+      "D 04",
+      "D 05",
+      "E 01",
+      "E 02",
+      "E 03",
+      "E 04",
+      "E 05",
+      "F 01",
+      "F 02",
+      "F 03",
+      "F 04",
+      "F 05",
+      "G 01",
+      "G 02",
+      "G 03",
+      "G 04",
+      "G 05",
+      "H 01",
+      "H 02",
+      "H 03",
+      "H 04",
+      "H 05",
+      "ISOL01",
+      "ISOL02",
+      "Box 01",
+      "Box 02",
+      "Box 03",
+      "Box 04",
+      "Box 05",
+      "Box 06",
+      "Box 07",
+      "Box 08",
+      "Box 09",
+      "Box 10",
+      "SRPA 1",
+      "SRPA 2",
+      "SRPA 3",
+      "SRPA 4",
+      "SRPA 5",
+      "INTERNAMENTO CLÍNICO",
+      "INTERNAMENTO CIRÚRGICO",
+      "UTI",
+      "ESTABILIZAÇÃO ADULTA",
+      "ESTABILIZAÇÃO PEDIÁTRICA",
+      "INTERNAMENTO PEDIÁTRICO",
+      "AZUL",
+      "CENTRO CIRÚRGICO",
+    ],
+
     VIA_AEREA: [
       "VE/AA",
       "VE + O2",
@@ -239,6 +331,17 @@ const CONFIG = {
 
   // Desfechos que excluem paciente do próximo turno
   DESFECHOS_EXCLUIR: ["ALTA", "ÓBITO", "TRANSFERÊNCIA"],
+
+  LINHAS_DIVISORAS: [
+    "INTERNAMENTO CLÍNICO",
+    "INTERNAMENTO CIRÚRGICO",
+    "UTI",
+    "ESTABILIZAÇÃO ADULTA",
+    "ESTABILIZAÇÃO PEDIÁTRICA",
+    "INTERNAMENTO PEDIÁTRICO",
+    "AZUL",
+    "CENTRO CIRÚRGICO",
+  ],
 };
 
 // ============================================================
