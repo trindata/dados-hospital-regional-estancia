@@ -252,6 +252,7 @@ const CONFIG = {
       "ENFERMARIA F",
       "ENFERMARIA G",
       "ENFERMARIA H",
+      "ISOLAMENTOS",
     ],
 
     VIA_AEREA: ["TQT+O2", "VE+O2", "VE/AA", "TQT/AA"],
