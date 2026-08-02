@@ -46,7 +46,6 @@ function _criarAbaModelo() {
     _criarCabecalhoDados(modelo);
     _criarLinhasIniciais(modelo);
     _aplicarValidacoes(modelo);
-    _ajustarColunas(modelo);
     _protegerCelulas(modelo);
 
     // Padronização de formatação
@@ -55,8 +54,7 @@ function _criarAbaModelo() {
     // Banner das linhas divisoras (depois de toda pintura da faixa)
     _implementarLinhasDivisoras(modelo);
 
-    // Configura congelamento e oculta aba
-    modelo.setFrozenRows(CONFIG.LINHA_CABECALHO); // Congela até cabeçalho
+    // Configura aba oculta
     modelo.hideSheet();
 
     Logger.log("[OK] ✅ Aba-modelo criada com sucesso!");
@@ -130,7 +128,7 @@ function _criarSecaoInformacoes(modelo) {
     // Linha 5: Fisioterapeuta 1
     modelo
       .getRange("A5")
-      .setValue("Fisioterapeuta 1:")
+      .setValue("Profissional 1:")
       .setFontWeight("bold")
       .setFontSize(11)
       .setFontColor(CONFIG.CORES.INFO_TITULO);
@@ -144,7 +142,7 @@ function _criarSecaoInformacoes(modelo) {
     // Linha 6: Fisioterapeuta 2
     modelo
       .getRange("A6")
-      .setValue("Fisioterapeuta 2:")
+      .setValue("Profissional 2:")
       .setFontWeight("bold")
       .setFontSize(11)
       .setFontColor(CONFIG.CORES.INFO_TITULO);
@@ -340,13 +338,27 @@ function _criarLinhasIniciais(modelo) {
 // ============================================================
 
 /**
- * Aplica regras de validação de dados (dropdowns) em todas as
- * colunas pertinentes da área de dados, e no campo Fisioterapeuta
- * da seção de informações.
+ * Aplica regras de validação de dados (dropdowns) na aba modelo.
  *
- * As listas de valores vêm de `CONFIG.VALIDACOES` e de
- * `FISIOTERAPEUTAS`. As colunas LEITO e EVENTOS usam
- * `setAllowInvalid(true)` deliberadamente — ver REFERENCIA.md.
+ * AGNÓSTICA DE ÁREA: não conhece nenhuma coluna pelo nome. Consome
+ * dois pontos de extensão declarados no config do setor:
+ *
+ *   - `VALIDACOES_COLUNAS` — mapa coluna → descritor, aplicado sobre
+ *     toda a faixa de dados. Coluna que não existe na área
+ *     simplesmente não aparece no mapa; nada de `if` aqui.
+ *     O descritor traz `lista` (valores fixos) OU `range` (notação A1
+ *     da própria aba, para dropdown que espelha células vivas — ex.:
+ *     a coluna PROFISSIONAL lendo os profissionais escalados no turno).
+ *
+ *   - `_validacoesCelulas()` — lista de células avulsas da seção de
+ *     informações (ex.: profissional 1 e 2). É função, e não const,
+ *     porque referencia listas de outros arquivos (FISIOTERAPEUTAS);
+ *     a avaliação tardia evita depender da ordem dos arquivos no
+ *     projeto Apps Script.
+ *
+ * `permitirInvalido: true` libera valor fora da fonte — usado em LEITO
+ * e EVENTOS deliberadamente (ver REFERENCIA.md), e recomendado em
+ * dropdowns por `range`, cuja fonte muda a cada turno.
  *
  * @param {GoogleAppsScript.Spreadsheet.Sheet} modelo - Aba modelo em construção
  * @throws {Error} Em falha técnica
@@ -355,235 +367,70 @@ function _aplicarValidacoes(modelo) {
   Logger.log("[INFO] Aplicando validações de dados...");
 
   try {
-    // FISIOTERAPEUTAS 1 (Cabeçalho)
-    const ruleFisios = SpreadsheetApp.newDataValidation()
-      .requireValueInList(FISIOTERAPEUTAS, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(CONFIG.LINHA_FISIO_1, CONFIG.COL_FISIOS, 1, 1)
-      .setDataValidation(ruleFisios);
+    let aplicadas = 0;
 
-    // FISIOTERAPEUTAS 2 (Cabeçalho)
-    const ruleFisios2 = SpreadsheetApp.newDataValidation()
-      .requireValueInList(FISIOTERAPEUTAS, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(CONFIG.LINHA_FISIO_2, CONFIG.COL_FISIOS, 1, 1)
-      .setDataValidation(ruleFisios2);
+    // ──────────────────────────────────────────────────────────
+    // Colunas da faixa de dados
+    // ──────────────────────────────────────────────────────────
+    Object.entries(VALIDACOES_COLUNAS).forEach(([colunaKey, descritor]) => {
+      const construtor = SpreadsheetApp.newDataValidation();
 
-    // LEITO (Coluna A)
-    const ruleLeito = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.LEITO, true)
-      .setAllowInvalid(true)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_LEITO,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleLeito);
+      if (descritor.range) {
+        // Dropdown vivo: aponta para células da PRÓPRIA aba. Cada turno é
+        // um clone e o Sheets reescreve a referência para a cópia, então
+        // cada aba passa a ler a sua própria equipe.
+        construtor.requireValueInRange(modelo.getRange(descritor.range), true);
+      } else if (Array.isArray(descritor.lista) && descritor.lista.length > 0) {
+        construtor.requireValueInList(descritor.lista, true);
+      } else {
+        Logger.log(
+          `[AVISO] Coluna ${colunaKey}: sem lista nem range de validação — ignorada`,
+        );
+        return;
+      }
 
-    // VIA AÉREA (Coluna D)
-    const ruleViaAerea = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.VIA_AEREA, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_VIA_AEREA,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleViaAerea);
-
-    // EVENTOS (Coluna E)
-    const ruleEventos = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.EVENTOS, true)
-      .setAllowInvalid(true) // Permite múltipla seleção manual
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_EVENTOS,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleEventos);
-
-    // VNI
-    if (CONFIG.COL_VNI && CONFIG.VALIDACOES.VNI) {
-      const ruleVNI = SpreadsheetApp.newDataValidation()
-        .requireValueInList(CONFIG.VALIDACOES.VNI, true)
-        .setAllowInvalid(false)
+      const regra = construtor
+        .setAllowInvalid(descritor.permitirInvalido === true)
         .build();
+
       modelo
         .getRange(
           CONFIG.PRIMEIRA_LINHA_DADOS,
-          CONFIG.COL_VNI,
+          _normalizarColuna(colunaKey),
           CONFIG.MAX_LINHAS_DADOS,
           1,
         )
-        .setDataValidation(ruleVNI);
-    }
+        .setDataValidation(regra);
 
-    // DESMAME VM
-    if (CONFIG.COL_DESMAME_VM && CONFIG.VALIDACOES.DESMAME_VM) {
-      const ruleDesmame = SpreadsheetApp.newDataValidation()
-        .requireValueInList(CONFIG.VALIDACOES.DESMAME_VM, true)
+      aplicadas++;
+    });
+
+    // ──────────────────────────────────────────────────────────
+    // Células avulsas da seção de informações (equipe)
+    // ──────────────────────────────────────────────────────────
+    _validacoesCelulas().forEach((celula) => {
+      if (!Array.isArray(celula.lista) || celula.lista.length === 0) {
+        Logger.log(
+          `[AVISO] Célula (${celula.linha}, ${celula.coluna}): lista vazia — ignorada`,
+        );
+        return;
+      }
+
+      const regra = SpreadsheetApp.newDataValidation()
+        .requireValueInList(celula.lista, true)
         .setAllowInvalid(false)
         .build();
+
       modelo
-        .getRange(
-          CONFIG.PRIMEIRA_LINHA_DADOS,
-          CONFIG.COL_DESMAME_VM,
-          CONFIG.MAX_LINHAS_DADOS,
-          1,
-        )
-        .setDataValidation(ruleDesmame);
-    }
+        .getRange(celula.linha, celula.coluna, 1, 1)
+        .setDataValidation(regra);
 
-    // META MOTORA
-    const ruleMetaMotora = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.META_MOTORA, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_META_MOTORA,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleMetaMotora);
+      aplicadas++;
+    });
 
-    // META RESP.
-    const ruleMetaResp = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.META_RESP, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_META_RESP,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleMetaResp);
-
-    // DEFICIT MOTOR
-    const ruleDeficit = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.DEFICIT_MOTOR, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_DEFICIT_MOTOR,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleDeficit);
-
-    // PRESCRIÇÃO
-    const rulePrescricao = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.PRESCRICAO, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_PRESCRICAO,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(rulePrescricao);
-
-    // ADMISSÃO
-    const ruleAdmissao = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.ADMISSAO, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_ADMISSAO,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleAdmissao);
-
-    // DESFECHO
-    const ruleDesfecho = SpreadsheetApp.newDataValidation()
-      .requireValueInList(CONFIG.VALIDACOES.DESFECHO, true)
-      .setAllowInvalid(false)
-      .build();
-    modelo
-      .getRange(
-        CONFIG.PRIMEIRA_LINHA_DADOS,
-        CONFIG.COL_DESFECHO,
-        CONFIG.MAX_LINHAS_DADOS,
-        1,
-      )
-      .setDataValidation(ruleDesfecho);
-
-    Logger.log("[OK] Validações aplicadas em colunas");
+    Logger.log(`[OK] ${aplicadas} validação(ões) aplicada(s)`);
   } catch (erro) {
     Logger.log(`[ERRO] Falha ao aplicar validações: ${erro.message}`);
-    throw erro;
-  }
-}
-
-// ============================================================
-// AJUSTAR LARGURAS DAS COLUNAS
-// ============================================================
-
-/**
- * Define larguras explícitas para as 16 colunas de dados a partir
- * de `CONFIG.LARGURAS`.
- *
- * Sobreposição parcial com `padronizarColunasDados` (que também
- * aceita `width`), mantido aqui para garantir largura desde a
- * criação do modelo, antes da padronização rodar.
- *
- * @param {GoogleAppsScript.Spreadsheet.Sheet} modelo - Aba modelo em construção
- * @throws {Error} Em falha técnica
- */
-function _ajustarColunas(modelo) {
-  Logger.log("[INFO] Ajustando larguras das colunas...");
-
-  try {
-    modelo.setColumnWidth(CONFIG.COL_LEITO, CONFIG.LARGURAS.LEITO);
-    modelo.setColumnWidth(CONFIG.COL_PACIENTE, CONFIG.LARGURAS.PACIENTE);
-    modelo.setColumnWidth(CONFIG.COL_DIAGNOSTICO, CONFIG.LARGURAS.DIAGNOSTICO);
-    modelo.setColumnWidth(CONFIG.COL_VIA_AEREA, CONFIG.LARGURAS.VIA_AEREA);
-    modelo.setColumnWidth(CONFIG.COL_EVENTOS, CONFIG.LARGURAS.EVENTOS);
-    if (CONFIG.COL_VNI) {
-      modelo.setColumnWidth(CONFIG.COL_VNI, CONFIG.LARGURAS.VNI);
-    }
-    if (CONFIG.COL_DESMAME_VM) {
-      modelo.setColumnWidth(CONFIG.COL_DESMAME_VM, CONFIG.LARGURAS.DESMAME_VM);
-    }
-    modelo.setColumnWidth(CONFIG.COL_META_MOTORA, CONFIG.LARGURAS.META_MOTORA);
-    modelo.setColumnWidth(CONFIG.COL_META_RESP, CONFIG.LARGURAS.META_RESP);
-    modelo.setColumnWidth(CONFIG.COL_IMS, CONFIG.LARGURAS.IMS);
-    modelo.setColumnWidth(
-      CONFIG.COL_DEFICIT_MOTOR,
-      CONFIG.LARGURAS.DEFICIT_MOTOR,
-    );
-    modelo.setColumnWidth(CONFIG.COL_NUM_ATEND, CONFIG.LARGURAS.NUM_ATEND);
-    modelo.setColumnWidth(CONFIG.COL_PRESCRICAO, CONFIG.LARGURAS.PRESCRICAO);
-    modelo.setColumnWidth(CONFIG.COL_ADMISSAO, CONFIG.LARGURAS.ADMISSAO);
-    modelo.setColumnWidth(CONFIG.COL_DESFECHO, CONFIG.LARGURAS.DESFECHO);
-    modelo.setColumnWidth(CONFIG.COL_AVALIACAO, CONFIG.LARGURAS.AVALIACAO);
-
-    Logger.log("[OK] Larguras das colunas ajustadas");
-  } catch (erro) {
-    Logger.log(`[ERRO] Falha ao ajustar colunas: ${erro.message}`);
     throw erro;
   }
 }

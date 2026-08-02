@@ -23,8 +23,13 @@
 //  10. LARGURAS            — larguras de coluna em pixels
 //  11. REGRAS DE NEGÓCIO   — desfechos que removem e campos resetados
 //
-// Há também o objeto FORMATO_COLUNAS_DADOS no fim do arquivo,
-// fora de CONFIG, consumido por util_padronizacao.gs.
+// Fora de CONFIG, no fim do arquivo, ficam três objetos que o
+// núcleo consome diretamente:
+//   - CAMPOS_RESETAR      — pacientes.gs
+//   - VALIDACOES_COLUNAS  — modelo_geral.gs (_aplicarValidacoes)
+//   - FORMATO_COLUNAS_DADOS — util_padronizacao.gs
+// mais a função _validacoesCelulas(), também lida por
+// _aplicarValidacoes.
 // ============================================================
 
 const PRIMEIRA = 14;
@@ -56,7 +61,8 @@ const CONFIG = {
 
   RANGE_DATA_TURNO: "B2:B3", // Data e Turno
   RANGE_EQUIPE: "B5:D8", // Fisioterapeuta, Enfermeiros, Médicos
-  RANGE_PACIENTES: `A${PRIMEIRA}:P${ULTIMA}`, // Dados dos pacientes
+  RANGE_PROFISSIONAIS: "B5:B6", // Fonte do dropdown da coluna PROFISSIONAL
+  RANGE_PACIENTES: `A${PRIMEIRA}:O${ULTIMA}`, // Dados dos pacientes
 
   // ============================================================
   // INDICADORES
@@ -125,9 +131,10 @@ const CONFIG = {
   COL_PRESCRICAO: 11, // K: Prescrição
   COL_ADMISSAO: 12, // L: Admissão
   COL_DESFECHO: 13, // M: Desfecho
-  COL_AVALIACAO: 14, // N: Avaliação Diária
+  COL_PROFISSIONAL: 14, // N: Profissional responsável (coluna de DADOS)
+  COL_AVALIACAO: 15, // O: Avaliação Diária
 
-  TOTAL_COLUNAS: 14,
+  TOTAL_COLUNAS: 15,
 
   // ============================================================
   // HEADERS (LINHA 13)=====================================================
@@ -147,6 +154,7 @@ const CONFIG = {
       "PRESCRIÇÃO",
       "ADMISSÃO",
       "DESFECHO",
+      "PROFISSIONAL",
       "AVALIAÇÃO DIÁRIA",
     ],
   ],
@@ -339,6 +347,7 @@ const CONFIG = {
     PRESCRICAO: 95,
     ADMISSAO: 80,
     DESFECHO: 140,
+    PROFISSIONAL: 205,
     AVALIACAO: 400, // Coluna mais larga para avaliação clínica detalhada
   },
 
@@ -383,6 +392,86 @@ const CAMPOS_RESETAR = {
   [CONFIG.COL_NUM_ATEND]: "", // Nº ATEND. - Resetar contador de atendimentos
   [CONFIG.COL_ADMISSAO]: "NÃO", // ADMISSÃO - Limpar admissão
 };
+
+// ============================================================
+// VALIDAÇÕES POR COLUNA (FAIXA DE DADOS)
+// ============================================================
+//
+// Mapa coluna → descritor de validação, consumido por
+// _aplicarValidacoes() em modelo_geral.gs. Aplicado sobre toda a
+// área de dados (linhas PRIMEIRA a ULTIMA).
+//
+// Propriedades suportadas:
+//   - lista: array de valores fixos do dropdown
+//   - range: notação A1 de um intervalo da PRÓPRIA aba, para
+//     dropdown que espelha células vivas (alternativa a `lista`)
+//   - permitirInvalido: true libera valor fora da fonte
+//     (default false)
+//
+// Colunas omitidas ficam sem validação. É assim que a mesma
+// _aplicarValidacoes serve áreas com conjuntos de colunas
+// diferentes — sem nenhum `if` no núcleo.
+//
+// LEITO e EVENTOS usam permitirInvalido: true deliberadamente —
+// ver REFERENCIA.md.
+// ============================================================
+
+const VALIDACOES_COLUNAS = {
+  [CONFIG.COL_LEITO]: {
+    lista: CONFIG.VALIDACOES.LEITO,
+    permitirInvalido: true,
+  },
+  [CONFIG.COL_VIA_AEREA]: { lista: CONFIG.VALIDACOES.VIA_AEREA },
+  [CONFIG.COL_EVENTOS]: {
+    lista: CONFIG.VALIDACOES.EVENTOS,
+    permitirInvalido: true, // Permite múltipla seleção manual
+  },
+  [CONFIG.COL_META_MOTORA]: { lista: CONFIG.VALIDACOES.META_MOTORA },
+  [CONFIG.COL_META_RESP]: { lista: CONFIG.VALIDACOES.META_RESP },
+  [CONFIG.COL_DEFICIT_MOTOR]: { lista: CONFIG.VALIDACOES.DEFICIT_MOTOR },
+  [CONFIG.COL_PRESCRICAO]: { lista: CONFIG.VALIDACOES.PRESCRICAO },
+  [CONFIG.COL_ADMISSAO]: { lista: CONFIG.VALIDACOES.ADMISSAO },
+  [CONFIG.COL_DESFECHO]: { lista: CONFIG.VALIDACOES.DESFECHO },
+
+  // Dropdown vivo: alimentado pelos fisioterapeutas escalados no dia
+  // (B5 e B6 da própria aba). permitirInvalido fica true porque a fonte
+  // muda a cada dia e o profissional do dia anterior é carregado
+  // junto com o paciente — sem isso, a linha herdada nasceria em erro.
+  [CONFIG.COL_PROFISSIONAL]: {
+    range: CONFIG.RANGE_PROFISSIONAIS,
+    permitirInvalido: true,
+  },
+};
+
+// ============================================================
+// VALIDAÇÕES DE CÉLULAS AVULSAS (SEÇÃO DE INFORMAÇÕES)
+// ============================================================
+//
+// Células únicas fora da faixa de dados — hoje, os campos de
+// fisioterapeuta 1 e 2 (B5 e B6).
+//
+// É FUNÇÃO, e não const, de propósito: referencia FISIOTERAPEUTAS,
+// declarado em outro arquivo. Uma const de topo dependeria da ordem
+// de avaliação dos arquivos no projeto Apps Script (temporal dead
+// zone); a função só é avaliada quando chamada.
+//
+// @returns {Array<{linha: number, coluna: number, lista: string[]}>}
+// ============================================================
+
+function _validacoesCelulas() {
+  return [
+    {
+      linha: CONFIG.LINHA_FISIO_1,
+      coluna: CONFIG.COL_FISIOS,
+      lista: FISIOTERAPEUTAS,
+    },
+    {
+      linha: CONFIG.LINHA_FISIO_2,
+      coluna: CONFIG.COL_FISIOS,
+      lista: FISIOTERAPEUTAS,
+    },
+  ];
+}
 
 // ============================================================
 // FORMATO PADRÃO DAS COLUNAS DE DADOS
@@ -474,6 +563,11 @@ const FORMATO_COLUNAS_DADOS = {
     wrap: true,
     verticalAlignment: "middle",
     width: CONFIG.LARGURAS.AVALIACAO,
+  },
+
+  [CONFIG.COL_PROFISSIONAL]: {
+    wrap: true,
+    width: CONFIG.LARGURAS.PROFISSIONAL,
   },
 };
 

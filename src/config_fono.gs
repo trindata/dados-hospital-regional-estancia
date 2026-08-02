@@ -1,5 +1,5 @@
 // ============================================================
-// config.gs — CONFIGURAÇÃO DO MAPA DA UTI
+// config.gs — CONFIGURAÇÃO DO MAPA DA FONOAUDIOLOGIA
 // ============================================================
 // Sistema de Gestão do Mapa do Eixo da Fisioterapia UTI
 // Versão: 1.0
@@ -23,13 +23,19 @@
 //  10. LARGURAS            — larguras de coluna em pixels
 //  11. REGRAS DE NEGÓCIO   — desfechos que removem e campos resetados
 //
-// Há também o objeto FORMATO_COLUNAS_DADOS no fim do arquivo,
-// fora de CONFIG, consumido por util_padronizacao.gs.
+// Fora de CONFIG, no fim do arquivo, ficam três objetos que o
+// núcleo consome diretamente:
+//   - CAMPOS_RESETAR      — pacientes.gs
+//   - VALIDACOES_COLUNAS  — modelo_geral.gs (_aplicarValidacoes)
+//   - FORMATO_COLUNAS_DADOS — util_padronizacao.gs
+// mais a função _validacoesCelulas(), também lida por
+// _aplicarValidacoes.
 // ============================================================
 
 const PRIMEIRA = 14;
 const MAX = 100;
 const ULTIMA = PRIMEIRA + MAX - 1;
+const SUFIXO_ABA_DIARIA = "D"; // Sufixo do nome da aba de turno único (diário)
 
 const CONFIG = {
   // ============================================================
@@ -42,8 +48,9 @@ const CONFIG = {
   // ============================================================
 
   RANGE_DATA_TURNO: "B2:B3", // Data e Turno
-  RANGE_EQUIPE: "B5:D8", // Fisioterapeuta, Enfermeiros, Médicos
-  RANGE_PACIENTES: `A${PRIMEIRA}:L${ULTIMA}`, // Dados dos pacientes
+  RANGE_EQUIPE: "B5:D8", // Profissional, Enfermeiros, Médicos
+  RANGE_PROFISSIONAIS: "B5:B6", // Fonte do dropdown da coluna PROFISSIONAL
+  RANGE_PACIENTES: `A${PRIMEIRA}:M${ULTIMA}`, // Dados dos pacientes
 
   // ============================================================
   // INDICADORES
@@ -83,20 +90,20 @@ const CONFIG = {
   // ============================================================
   // COORDENADAS HORIZONTAIS (colunas)
   // ============================================================
-  COL_LEITO: 1, // A
-  COL_PROFISSIONAL: 2, // B
-  COL_PACIENTE: 2, // B
-  COL_DIAGNOSTICO: 3, // C
-  COL_VIA_AEREA: 4, // D
-  COL_VIA_DE_ALIMENTACAO: 5, // E
-  COL_FOIS: 6, // F
-  COL_NUM_ATEND: 7, // G
-  COL_PRIORIDADE: 8, // H
-  COL_ADMISSAO: 9, // I
-  COL_DESFECHO: 10, // J
-  COL_PRESCRICAO: 11, // K
-  COL_FONO: 12, // L
-  COL_AVALIACAO: 13 // M
+  COL_LEITO: 1, // A: Leito
+  COL_PROFISSIONAL: 2, // B: campo da SEÇÃO DE INFORMAÇÕES (B5/B6)
+  COL_PACIENTE: 2, // B: Paciente
+  COL_DIAGNOSTICO: 3, // C: Diagnóstico Clínico
+  COL_VIA_AEREA: 4, // D: Via Aérea
+  COL_VIA_ALIMENTACAO: 5, // E: Via de Alimentação
+  COL_FOIS: 6, // F: FOIS
+  COL_NUM_ATEND: 7, // G: Nº Atend.
+  COL_PRIORIDADE: 8, // H: Prioridade
+  COL_ADMISSAO: 9, // I: Admissão
+  COL_DESFECHO: 10, // J: Desfecho
+  COL_PRESCRICAO: 11, // K: Prescrição
+  COL_FONO: 12, // L: Profissional responsável (coluna de DADOS)
+  COL_AVALIACAO: 13, // M: Avaliação Diária
 
   TOTAL_COLUNAS: 13,
 
@@ -145,34 +152,44 @@ const CONFIG = {
   // ============================================================
 
   VALIDACOES: {
-      VIA_AEREA: [
-        "VE/AA", 
-        "VE + O2", 
-        "MH", 
-        "TQT PLÁSTICA CUFF INSUFLADO",
-        "TQT PLÁSTICA CUFF DESINSUFLADO", 
-        "TQT METÁLICA", 
-        "IOT", 
-        "OUTRA"
-      ],
-      VIA_ALIMENTACAO: [
-        "VAA EXCLUSIVA", 
-        "VO LIVRE", 
-        "VO BRANDA", 
-        "VO PASTOSA",
-        "VO PASTOSA PARA DISFÁGICO", 
-        "VO PASTOSA LIQUIDIFICADA",
-        "VO LÍQUIDOS FINOS", 
-        "VO LÍQUIDOS NÉCTAR", 
-        "VO LÍQUIDOS MEL",
-        "VO + VAA", 
-        "ZERO ATÉ AVALIAÇÃO DA FONO"
-      ],
-      FOIS: ["1", "2", "3", "4", "5", "6", "7"],
-      PRIORIDADE: ["ROTINA", "PRIORITÁRIO", "GRAVE"],
-      ADMISSAO: ["SIM", "NÃO"],
-      DESFECHO: ["ALTA", "TRANSFERÊNCIA", "ÓBITO"]
-    },
+    VIA_AEREA: [
+      "VE/AA",
+      "VE + O2",
+      "MH",
+      "TQT PLÁSTICA CUFF INSUFLADO",
+      "TQT PLÁSTICA CUFF DESINSUFLADO",
+      "TQT METÁLICA",
+      "IOT",
+      "OUTRA",
+    ],
+
+    // Ordenada da consistência mais restritiva para a mais livre.
+    VIA_ALIMENTACAO: [
+      "VO LÍQUIDA",
+      "LIQUIDIFICADA + LÍQUIDOS",
+      "LIQUIDIFICADA + LÍQUIDOS NÉCTAR",
+      "LIQUIDIFICADA + LÍQUIDOS MEL",
+      "PASTOSA P/ DISFÁGICO + LÍQUIDOS",
+      "PASTOSA P/ DISFÁGICO + LÍQUIDOS NÉCTAR",
+      "PASTOSA P/ DISFÁGICO + LÍQUIDOS MEL",
+      "PASTOSA + LÍQUIDOS",
+      "PASTOSA + LÍQUIDOS NÉCTAR",
+      "PASTOSA + LÍQUIDOS MEL",
+      "BRANDA COM PROTEÍNA TRITURADA + LÍQUIDOS",
+      "BRANDA + LÍQUIDOS",
+      "VO LIVRE",
+    ],
+
+    FOIS: ["1", "2", "3", "4", "5", "6", "7"],
+
+    PRIORIDADE: ["ROTINA", "PRIORITÁRIO", "GRAVE"],
+
+    PRESCRICAO: ["SIM", "NÃO"],
+
+    ADMISSAO: ["SIM", "NÃO"],
+
+    DESFECHO: ["ALTA", "TRANSFERÊNCIA", "ÓBITO"],
+  },
 
   // ============================================================
   // CORES DO TEMA VISUAL (Padrão Ouro)
@@ -201,18 +218,19 @@ const CONFIG = {
   // ============================================================
 
   LARGURAS: {
-    LEITO: 90, 
-    PACIENTE: 190, 
+    LEITO: 90,
+    PACIENTE: 190,
     DIAGNOSTICO: 210,
-    VIA_AEREA: 135, 
-    VIA_ALIMENTACAO: 180, 
-    FOIS: 55, 
+    VIA_AEREA: 135,
+    VIA_ALIMENTACAO: 180,
+    FOIS: 55,
     NUM_ATEND: 75,
-    PRIORIDADE: 100, 
-    ADMISSAO: 80, 
+    PRIORIDADE: 100,
+    ADMISSAO: 80,
     DESFECHO: 125,
-    PROFISSIONAL: 205, 
-    AVALIACAO: 430
+    PRESCRICAO: 95,
+    PROFISSIONAL: 205,
+    AVALIACAO: 430, // Coluna mais larga para avaliação clínica detalhada
   },
 
   // ============================================================
@@ -236,15 +254,85 @@ const CONFIG = {
 //   - Valor: conteúdo limpo (string vazia "" ou valor padrão)
 //
 // Colunas omitidas não são alteradas entre turnos.
-// Eventos e atendimentos são sempre zerados; admissão
-// recebe valor padrão "NÃO".
+// Atendimentos são sempre zerados; admissão recebe valor
+// padrão "NÃO". Esta área não tem coluna de eventos.
 // ============================================================
 
 const CAMPOS_RESETAR = {
-  [CONFIG.COL_EVENTOS]: "", // EVENTOS - Limpar eventos do turno anterior
   [CONFIG.COL_NUM_ATEND]: "", // Nº ATEND. - Resetar contador de atendimentos
   [CONFIG.COL_ADMISSAO]: "NÃO", // ADMISSÃO - Limpar admissão
 };
+
+// ============================================================
+// VALIDAÇÕES POR COLUNA (FAIXA DE DADOS)
+// ============================================================
+//
+// Mapa coluna → descritor de validação, consumido por
+// _aplicarValidacoes() em modelo_geral.gs. Aplicado sobre toda a
+// área de dados (linhas PRIMEIRA a ULTIMA).
+//
+// Propriedades suportadas (use lista OU range, nunca os dois):
+//   - lista: array de valores fixos do dropdown
+//   - range: notação A1 da PRÓPRIA aba — dropdown vivo, que espelha
+//     o conteúdo atual das células (ex.: os profissionais de plantão
+//     digitados em B5/B6). Como cada turno é um clone do modelo, a
+//     referência acompanha a cópia e cada aba lê os próprios valores.
+//   - permitirInvalido: true libera digitação fora da lista
+//     (default false)
+//
+// Colunas omitidas ficam sem validação. É assim que a mesma
+// _aplicarValidacoes serve áreas com conjuntos de colunas
+// diferentes — sem nenhum `if` no núcleo.
+// ============================================================
+
+const VALIDACOES_COLUNAS = {
+  [CONFIG.COL_VIA_AEREA]: { lista: CONFIG.VALIDACOES.VIA_AEREA },
+  [CONFIG.COL_VIA_ALIMENTACAO]: { lista: CONFIG.VALIDACOES.VIA_ALIMENTACAO },
+  [CONFIG.COL_FOIS]: { lista: CONFIG.VALIDACOES.FOIS },
+  [CONFIG.COL_PRIORIDADE]: { lista: CONFIG.VALIDACOES.PRIORIDADE },
+  [CONFIG.COL_PRESCRICAO]: { lista: CONFIG.VALIDACOES.PRESCRICAO },
+  [CONFIG.COL_ADMISSAO]: { lista: CONFIG.VALIDACOES.ADMISSAO },
+  [CONFIG.COL_DESFECHO]: { lista: CONFIG.VALIDACOES.DESFECHO },
+
+  // Dropdown vivo: alimentado pelos profissionais escalados no turno
+  // (B5 e B6 da própria aba). permitirInvalido fica true porque a fonte
+  // muda a cada turno e o profissional do turno anterior é carregado
+  // junto com o paciente — sem isso, a linha herdada nasceria em erro.
+  [CONFIG.COL_FONO]: {
+    range: CONFIG.RANGE_PROFISSIONAIS,
+    permitirInvalido: true,
+  },
+};
+
+// ============================================================
+// VALIDAÇÕES DE CÉLULAS AVULSAS (SEÇÃO DE INFORMAÇÕES)
+// ============================================================
+//
+// Células únicas fora da faixa de dados — hoje, os campos de
+// profissional (B5 e B6).
+//
+// É FUNÇÃO, e não const, de propósito: referencia FISIOTERAPEUTAS,
+// declarado em outro arquivo. Uma const de topo dependeria da ordem
+// de avaliação dos arquivos no projeto Apps Script (temporal dead
+// zone); a função só é avaliada quando chamada.
+//
+// @returns {Array<{linha: number, coluna: number, lista: string[]}>}
+// ============================================================
+
+function _validacoesCelulas() {
+  return [
+    {
+      linha: CONFIG.LINHA_PROFISSIONAL_1,
+      coluna: CONFIG.COL_PROFISSIONAL,
+      lista: FISIOTERAPEUTAS,
+    },
+    {
+      linha: CONFIG.LINHA_PROFISSIONAL_2,
+      coluna: CONFIG.COL_PROFISSIONAL,
+      lista: FISIOTERAPEUTAS,
+    },
+  ];
+}
 
 // ============================================================
 // FORMATO PADRÃO DAS COLUNAS DE DADOS
@@ -264,19 +352,77 @@ const CAMPOS_RESETAR = {
 // ============================================================
 
 const FORMATO_COLUNAS_DADOS = {
-  [CONFIG.COL_LEITO]: { horizontalAlignment: "center", width: CONFIG.LARGURAS.LEITO },
-  [CONFIG.COL_PACIENTE]: { wrap: true, verticalAlignment: "middle", width: CONFIG.LARGURAS.PACIENTE },
-  [CONFIG.COL_DIAGNOSTICO]: { wrap: true, verticalAlignment: "middle", width: CONFIG.LARGURAS.DIAGNOSTICO },
-  [CONFIG.COL_VIA_AEREA]: { horizontalAlignment: "center", wrap: true, width: CONFIG.LARGURAS.VIA_AEREA },
-  [CONFIG.COL_VIA_ALIMENTACAO]: { horizontalAlignment: "center", wrap: true, width: CONFIG.LARGURAS.VIA_ALIMENTACAO },
-  [CONFIG.COL_FOIS]: { horizontalAlignment: "center", width: CONFIG.LARGURAS.FOIS },
-  [CONFIG.COL_NUM_ATEND]: { horizontalAlignment: "center", width: CONFIG.LARGURAS.NUM_ATEND },
-  [CONFIG.COL_PRIORIDADE]: { horizontalAlignment: "center", width: CONFIG.LARGURAS.PRIORIDADE },
-  [CONFIG.COL_ADMISSAO]: { horizontalAlignment: "center", width: CONFIG.LARGURAS.ADMISSAO },
-  [CONFIG.COL_DESFECHO]: { horizontalAlignment: "center", width: CONFIG.LARGURAS.DESFECHO },
-  [CONFIG.COL_PROFISSIONAL]: { wrap: true, width: CONFIG.LARGURAS.PROFISSIONAL },
-  [CONFIG.COL_AVALIACAO]: { wrap: true, verticalAlignment: "middle", width: CONFIG.LARGURAS.AVALIACAO }
-}
+  [CONFIG.COL_LEITO]: {
+    horizontalAlignment: "center",
+    width: CONFIG.LARGURAS.LEITO,
+  },
+
+  [CONFIG.COL_PACIENTE]: {
+    wrap: true,
+    verticalAlignment: "middle",
+    width: CONFIG.LARGURAS.PACIENTE,
+  },
+
+  [CONFIG.COL_DIAGNOSTICO]: {
+    wrap: true,
+    verticalAlignment: "middle",
+    width: CONFIG.LARGURAS.DIAGNOSTICO,
+  },
+
+  [CONFIG.COL_VIA_AEREA]: {
+    horizontalAlignment: "center",
+    wrap: true,
+    width: CONFIG.LARGURAS.VIA_AEREA,
+  },
+
+  [CONFIG.COL_VIA_ALIMENTACAO]: {
+    horizontalAlignment: "center",
+    wrap: true,
+    width: CONFIG.LARGURAS.VIA_ALIMENTACAO,
+  },
+
+  [CONFIG.COL_FOIS]: {
+    horizontalAlignment: "center",
+    numberFormat: "@", // Forçar texto: a lista FOIS é de strings ("1".."7")
+    width: CONFIG.LARGURAS.FOIS,
+  },
+
+  [CONFIG.COL_NUM_ATEND]: {
+    horizontalAlignment: "center",
+    width: CONFIG.LARGURAS.NUM_ATEND,
+  },
+
+  [CONFIG.COL_PRIORIDADE]: {
+    horizontalAlignment: "center",
+    width: CONFIG.LARGURAS.PRIORIDADE,
+  },
+
+  [CONFIG.COL_ADMISSAO]: {
+    horizontalAlignment: "center",
+    width: CONFIG.LARGURAS.ADMISSAO,
+  },
+
+  [CONFIG.COL_DESFECHO]: {
+    horizontalAlignment: "center",
+    width: CONFIG.LARGURAS.DESFECHO,
+  },
+
+  [CONFIG.COL_PRESCRICAO]: {
+    horizontalAlignment: "center",
+    width: CONFIG.LARGURAS.PRESCRICAO,
+  },
+
+  [CONFIG.COL_FONO]: {
+    wrap: true,
+    width: CONFIG.LARGURAS.PROFISSIONAL,
+  },
+
+  [CONFIG.COL_AVALIACAO]: {
+    wrap: true,
+    verticalAlignment: "middle",
+    width: CONFIG.LARGURAS.AVALIACAO,
+  },
+};
 
 const FORMATO_LINHA_DIVISORA = {
   background: "#FFFF00",
