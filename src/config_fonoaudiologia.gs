@@ -58,18 +58,18 @@ const CONFIG = {
 
   // ATENÇÃO, NECESSÁRIO ATUALIZAR SE MODIFICAR COORDENADAS HORIZONTAIS OU VERTICAIS
   INDICADORES: [
-    { label: "Atendimentos", formula: `=SUM(G${PRIMEIRA}:G${ULTIMA})` },
-    { label: "Admissões", formula: `=COUNTIF(I${PRIMEIRA}:I${ULTIMA};"SIM")` },
-    { label: "Altas", formula: `=COUNTIF(J${PRIMEIRA}:J${ULTIMA};"ALTA")` },
+    { label: "Atendimentos", formula: `=SUM(H${PRIMEIRA}:H${ULTIMA})` },
+    { label: "Admissões", formula: `=COUNTIF(J${PRIMEIRA}:J${ULTIMA};"SIM")` },
+    { label: "Altas", formula: `=COUNTIF(K${PRIMEIRA}:K${ULTIMA};"ALTA")` },
     {
       label: "Transferências",
-      formula: `=COUNTIF(J${PRIMEIRA}:J${ULTIMA};"TRANSFERÊNCIA")`,
+      formula: `=COUNTIF(K${PRIMEIRA}:K${ULTIMA};"TRANSFERÊNCIA")`,
     },
-    { label: "Óbitos", formula: `=COUNTIF(J${PRIMEIRA}:J${ULTIMA};"ÓBITO")` },
-    { label: "Prescritos", formula: `=COUNTIF(K${PRIMEIRA}:K${ULTIMA};"SIM")` },
+    { label: "Óbitos", formula: `=COUNTIF(K${PRIMEIRA}:K${ULTIMA};"ÓBITO")` },
+    { label: "Prescritos", formula: `=COUNTIF(L${PRIMEIRA}:L${ULTIMA};"SIM")` },
     {
       label: "Não Prescritos",
-      formula: `=COUNTIF(K${PRIMEIRA}:K${ULTIMA};"NÃO")`,
+      formula: `=COUNTIF(L${PRIMEIRA}:L${ULTIMA};"NÃO")`,
     },
   ],
 
@@ -90,22 +90,22 @@ const CONFIG = {
   // ============================================================
   // COORDENADAS HORIZONTAIS (colunas)
   // ============================================================
-  COL_LEITO: 1, // A: Leito
-  COL_PROFISSIONAL: 2, // B: campo da SEÇÃO DE INFORMAÇÕES (B5/B6)
-  COL_PACIENTE: 2, // B: Paciente
-  COL_DIAGNOSTICO: 3, // C: Diagnóstico Clínico
-  COL_VIA_AEREA: 4, // D: Via Aérea
-  COL_VIA_ALIMENTACAO: 5, // E: Via de Alimentação
-  COL_FOIS: 6, // F: FOIS
-  COL_NUM_ATEND: 7, // G: Nº Atend.
-  COL_PRIORIDADE: 8, // H: Prioridade
-  COL_ADMISSAO: 9, // I: Admissão
-  COL_DESFECHO: 10, // J: Desfecho
-  COL_PRESCRICAO: 11, // K: Prescrição
-  COL_FONO: 12, // L: Profissional responsável (coluna de DADOS)
-  COL_AVALIACAO: 13, // M: Avaliação Diária
-
-  TOTAL_COLUNAS: 13,
+  COL_LEITO: 1, // A: ÍNDICE — chave de união (semeada, não é pra editar)
+  COL_LEITO_VARIAVEL: 2, // B: LEITO real (dropdown, digitado)
+  COL_PROFISSIONAL: 2, // B: SÓ seção de informações (B5/B6, linhas 5‑6) — ver risco (e)
+  COL_PACIENTE: 3,
+  COL_DIAGNOSTICO: 4,
+  COL_VIA_AEREA: 5,
+  COL_VIA_ALIMENTACAO: 6,
+  COL_FOIS: 7,
+  COL_NUM_ATEND: 8,
+  COL_PRIORIDADE: 9,
+  COL_ADMISSAO: 10,
+  COL_DESFECHO: 11,
+  COL_PRESCRICAO: 12,
+  COL_FONO: 13,
+  COL_AVALIACAO: 14,
+  TOTAL_COLUNAS: 14,
 
   // ============================================================
   // HEADERS (LINHA 13)
@@ -113,6 +113,7 @@ const CONFIG = {
 
   HEADERS: [
     [
+      "ÍNDICE",
       "LEITO",
       "PACIENTE",
       "DIAGNÓSTICO CLINICO",
@@ -141,7 +142,13 @@ const CONFIG = {
     "",
     "",
     "",
+    "",
+    "",
+    "",
     "INTERNAMENTO CIRÚRGICO",
+    "",
+    "",
+    "",
     "",
     "",
     "",
@@ -153,7 +160,11 @@ const CONFIG = {
     "",
     "",
     "",
+    "",
+    "",
     "ESTABILIZAÇÃO ADULTA",
+    "",
+    "",
     "",
     "",
     "",
@@ -161,10 +172,16 @@ const CONFIG = {
     "ESTABILIZAÇÃO PEDIÁTRICA",
     "",
     "",
+    "",
+    "",
     "INTERNAMENTO PEDIÁTRICO",
     "",
     "",
+    "",
+    "",
     "AZUL",
+    "",
+    "",
     "",
     "",
     "",
@@ -174,7 +191,46 @@ const CONFIG = {
     "",
     "",
     "",
-  ],
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ].map((v, i) => (v !== "" ? v : String(PRIMEIRA + i))),
 
   // ============================================================
   // VALORES DE VALIDAÇÃO (DROPDOWNS)
@@ -371,6 +427,7 @@ const CONFIG = {
 const CAMPOS_RESETAR = {
   [CONFIG.COL_NUM_ATEND]: "", // Nº ATEND. - Resetar contador de atendimentos
   [CONFIG.COL_ADMISSAO]: "NÃO", // ADMISSÃO - Limpar admissão
+  [CONFIG.COL_FONO]: "", // Profissional - Limpar para próximo turno
 };
 
 // ============================================================
@@ -396,6 +453,7 @@ const CAMPOS_RESETAR = {
 // ============================================================
 
 const VALIDACOES_COLUNAS = {
+  [CONFIG.COL_LEITO_VARIAVEL]: { lista: CONFIG.VALIDACOES.LEITO },
   [CONFIG.COL_VIA_AEREA]: { lista: CONFIG.VALIDACOES.VIA_AEREA },
   [CONFIG.COL_VIA_ALIMENTACAO]: { lista: CONFIG.VALIDACOES.VIA_ALIMENTACAO },
   [CONFIG.COL_FOIS]: { lista: CONFIG.VALIDACOES.FOIS },
@@ -463,6 +521,11 @@ function _validacoesCelulas() {
 
 const FORMATO_COLUNAS_DADOS = {
   [CONFIG.COL_LEITO]: {
+    horizontalAlignment: "center",
+    width: 105,
+  }, // índice, estreito
+
+  [CONFIG.COL_LEITO_VARIAVEL]: {
     horizontalAlignment: "center",
     width: CONFIG.LARGURAS.LEITO,
   },
