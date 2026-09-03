@@ -55,7 +55,7 @@ const CONFIG = {
   RANGE_DATA_TURNO: "B2:B3", // Data e Turno
   RANGE_EQUIPE: "B5:D8", // Profissional, Enfermeiros, Médicos
   RANGE_PROFISSIONAIS: "B5:B6", // Fonte do dropdown da coluna PROFISSIONAL
-  RANGE_PACIENTES: `A${PRIMEIRA}:G${ULTIMA}`, // Dados dos pacientes
+  RANGE_PACIENTES: `A${PRIMEIRA}:H${ULTIMA}`, // Dados dos pacientes
 
   // ============================================================
   // INDICADORES
@@ -63,13 +63,13 @@ const CONFIG = {
 
   // ATENÇÃO, NECESSÁRIO ATUALIZAR SE MODIFICAR COORDENADAS HORIZONTAIS OU VERTICAIS
   INDICADORES: [
-    { label: "Atendimentos", formula: `=SUM(D${PRIMEIRA}:D${ULTIMA})` },
-    { label: "Altas", formula: `=COUNTIF(E${PRIMEIRA}:E${ULTIMA};"ALTA")` },
+    { label: "Atendimentos", formula: `=SUM(E${PRIMEIRA}:E${ULTIMA})` },
+    { label: "Altas", formula: `=COUNTIF(F${PRIMEIRA}:F${ULTIMA};"ALTA")` },
     {
       label: "Transferências",
-      formula: `=COUNTIF(E${PRIMEIRA}:E${ULTIMA};"TRANSFERÊNCIA")`,
+      formula: `=COUNTIF(F${PRIMEIRA}:F${ULTIMA};"TRANSFERÊNCIA")`,
     },
-    { label: "Óbitos", formula: `=COUNTIF(E${PRIMEIRA}:E${ULTIMA};"ÓBITO")` },
+    { label: "Óbitos", formula: `=COUNTIF(F${PRIMEIRA}:F${ULTIMA};"ÓBITO")` },
   ],
 
   // ============================================================
@@ -89,16 +89,17 @@ const CONFIG = {
   // ============================================================
   // COORDENADAS HORIZONTAIS (colunas)
   // ============================================================
-  COL_LEITO: 1, // A: Leito
-  COL_PROFISSIONAL: 2, // B: campo da SEÇÃO DE INFORMAÇÕES (B5/B6)
-  COL_PACIENTE: 2, // B: Paciente
-  COL_DIAGNOSTICO: 3, // C: Diagnóstico Clínico
-  COL_NUM_ATEND: 4, // D: Nº Atend.
-  COL_DESFECHO: 5, // E: Desfecho
-  COL_PSICO: 6, // F: Profissional responsável (coluna de DADOS)
-  COL_AVALIACAO: 7, // G: Avaliação Diária
+  COL_LEITO: 1, // A: ÍNDICE — chave de união (semeada, não é pra editar)
+  COL_LEITO_VARIAVEL: 2, // B: LEITO real (dropdown, digitado)
+  COL_PROFISSIONAL: 2, // B: SÓ seção de informações (B5/B6, linhas 5-6)
+  COL_PACIENTE: 3, // C: Paciente
+  COL_DIAGNOSTICO: 4, // D: Diagnóstico Clínico
+  COL_NUM_ATEND: 5, // E: Nº Atend.
+  COL_DESFECHO: 6, // F: Desfecho
+  COL_PSICO: 7, // G: Profissional responsável (coluna de DADOS)
+  COL_AVALIACAO: 8, // H: Avaliação Diária
 
-  TOTAL_COLUNAS: 7,
+  TOTAL_COLUNAS: 8,
 
   // ============================================================
   // HEADERS (LINHA 13)
@@ -106,6 +107,7 @@ const CONFIG = {
 
   HEADERS: [
     [
+      "ÍNDICE",
       "LEITO",
       "PACIENTE",
       "DIAGNÓSTICO CLINICO",
@@ -161,7 +163,10 @@ const CONFIG = {
     "",
     "",
     "",
-  ],
+  ]
+    .concat(Array(MAX).fill(""))
+    .slice(0, MAX)
+    .map((v, i) => (v !== "" ? v : String(PRIMEIRA + i))),
 
   // ============================================================
   // VALORES DE VALIDAÇÃO (DROPDOWNS)
@@ -261,6 +266,7 @@ const CONFIG = {
   // ============================================================
 
   LARGURAS: {
+    INDICE: 90,
     LEITO: 90,
     PACIENTE: 190,
     DIAGNOSTICO: 210,
@@ -308,6 +314,7 @@ const CONFIG = {
 
 const CAMPOS_RESETAR = {
   [CONFIG.COL_NUM_ATEND]: "", // Nº ATEND. - Resetar contador de atendimentos
+  [CONFIG.COL_PSICO]: "", // Profissional - Limpar para próximo turno
 };
 
 // ============================================================
@@ -335,7 +342,7 @@ const CAMPOS_RESETAR = {
 const VALIDACOES_COLUNAS = {
   // permitirInvalido: true porque LEITOS_INICIAIS semeia os rótulos de
   // setor e deixa linhas em branco para preenchimento livre.
-  [CONFIG.COL_LEITO]: {
+  [CONFIG.COL_LEITO_VARIAVEL]: {
     lista: CONFIG.VALIDACOES.LEITO,
     permitirInvalido: true,
   },
@@ -400,6 +407,10 @@ function _validacoesCelulas() {
 
 const FORMATO_COLUNAS_DADOS = {
   [CONFIG.COL_LEITO]: {
+    horizontalAlignment: "center",
+    width: CONFIG.LARGURAS.INDICE,
+  },
+  [CONFIG.COL_LEITO_VARIAVEL]: {
     horizontalAlignment: "center",
     width: CONFIG.LARGURAS.LEITO,
   },
